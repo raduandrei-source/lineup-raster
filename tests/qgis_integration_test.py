@@ -226,5 +226,26 @@ check('rotated photo: pixels identical wherever the slider is',
       all(ia.pixel(x, y) == ib.pixel(x, y) for x in range(int(W * 0.85), W, 3) for y in range(0, H, 5)) and
       all(ia.pixel(x, y) == ib.pixel(x, y) for x in range(0, int(W * 0.25), 3) for y in range(0, H, 5)))
 
+# ---------------- menu: run entry + online help entry ----------------
+from qgis.PyQt.QtGui import QDesktopServices
+class MenuIface:
+    def __init__(self): self.menu, self.toolbar = [], []
+    def mainWindow(self): return None
+    def mapCanvas(self): return canvas
+    def addPluginToRasterMenu(self, name, action): self.menu.append((name, action))
+    def removePluginRasterMenu(self, name, action): self.menu.remove((name, action))
+    def addRasterToolBarIcon(self, action): self.toolbar.append(action)
+    def removeRasterToolBarIcon(self, action): self.toolbar.remove(action)
+mi = MenuIface(); mp = ag.LineUpRasterPlugin(mi); mp.initGui()
+labels = [(n, a.text()) for n, a in mi.menu]
+check('menu has the run entry and the Help entry under "LineUp Raster"',
+      labels == [('&LineUp Raster', 'Line up and georeference a photo...'), ('&LineUp Raster', 'Help (online user guide)')], str(labels))
+opened = []
+QDesktopServices.openUrl = staticmethod(lambda url: opened.append(url.toString()) or True)
+mi.menu[1][1].trigger()
+check('Help opens the online user guide', opened == ['https://raduandrei-source.github.io/lineup-raster/'], str(opened))
+mp.unload()
+check('unload removes both menu entries and the toolbar icon', mi.menu == [] and mi.toolbar == [])
+
 print('\nFAILURES:', fails)
 qgs.exitQgis()

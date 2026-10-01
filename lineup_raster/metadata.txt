@@ -16,6 +16,7 @@ experimental=False
 changelog=
     0.3.0 - First public release, renamed from "Auto Georeference" to LineUp Raster
     - English documentation, installation guide and help site
+    - Raster > LineUp Raster > Help (online user guide) opens the help site
     - install_dependencies.py: installs OpenCV and repairs numpy only when QGIS's GDAL cannot use it
     0.2.1 - Works even if pip replaced the numpy that came with QGIS (no gdal_array); clear message + repair_dependencies.bat; installers never touch numpy
     0.2.0 - Auto-refine starts from the manual alignment and is shown before saving

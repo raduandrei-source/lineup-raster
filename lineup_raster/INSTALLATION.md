@@ -181,7 +181,7 @@ Two version numbers and no error means everything is in place.
 
 You can also save without auto-refine; the photo is then placed exactly by your manual alignment.
 
-The full guide is on the [help site](https://raduandrei-source.github.io/lineup-raster/).
+The full guide is also in QGIS: **Raster → LineUp Raster → Help (online user guide)** opens the [help site](https://raduandrei-source.github.io/lineup-raster/).
 
 ---
 

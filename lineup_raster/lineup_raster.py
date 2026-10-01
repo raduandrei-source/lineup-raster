@@ -55,8 +55,8 @@ DEPENDENCY_HELP = (
     'folder and accept the administrator prompt. It restores the numpy that QGIS needs and '
     'installs a matching OpenCV. Then start QGIS again.')
 
-from qgis.PyQt.QtCore import Qt, QPoint, QRect, QSize
-from qgis.PyQt.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QTransform
+from qgis.PyQt.QtCore import Qt, QPoint, QRect, QSize, QUrl
+from qgis.PyQt.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QTransform, QDesktopServices
 from qgis.PyQt.QtWidgets import (QAction, QMessageBox, QFileDialog, QDialog,
                                  QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
                                  QSlider, QComboBox, QWidget, QApplication)
@@ -86,6 +86,7 @@ PREVIEW_MAX_DIM = 3000     # images in the comparison view are downsampled to th
 MATCH_MAX_DIM = 3000       # working resolution of the reference for feature matching
 REF_RENDER_MAX_DIM = 3000  # the reference is rendered up to this size (sharper than the screen)
 KEEP_VISIBLE = 40          # px of each image that always stay on screen (so it can't get lost)
+HELP_URL = 'https://raduandrei-source.github.io/lineup-raster/'   # online user guide
 
 
 # ----------------------------------------------------------------------------------
@@ -917,9 +918,18 @@ class LineUpRasterPlugin:
         self.iface.addPluginToRasterMenu('&LineUp Raster', self.action)
         self.iface.addRasterToolBarIcon(self.action)
 
+        self.help_action = QAction('Help (online user guide)', self.iface.mainWindow())
+        self.help_action.triggered.connect(self.open_help)
+        self.iface.addPluginToRasterMenu('&LineUp Raster', self.help_action)
+
     def unload(self):
         self.iface.removePluginRasterMenu('&LineUp Raster', self.action)
+        self.iface.removePluginRasterMenu('&LineUp Raster', self.help_action)
         self.iface.removeRasterToolBarIcon(self.action)
+
+    def open_help(self):
+        """Open the online user guide in the default web browser."""
+        QDesktopServices.openUrl(QUrl(HELP_URL))
 
     def run(self):
         if _DEPENDENCY_ERROR:

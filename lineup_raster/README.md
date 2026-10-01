@@ -29,6 +29,8 @@ Installation: [INSTALLATION.md](INSTALLATION.md)
 4. **Raster → LineUp Raster → Line up and georeference a photo…**, choose the photo.
 5. Line the photo up, press **Auto-refine alignment**, check with the slider, **Save georeferenced photo…**.
 
+**Raster → LineUp Raster → Help (online user guide)** opens the user guide in your browser.
+
 ## Controls in the alignment window
 
 | Action | Effect |
