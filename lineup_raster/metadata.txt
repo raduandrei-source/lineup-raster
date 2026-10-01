@@ -1,5 +1,5 @@
 [general]
-name=Auto Georeference
+name=LineUp Raster
 qgisMinimumVersion=3.16
 qgisMaximumVersion=3.99
 description=Georeference aerial photos by lining them up over the map by hand, then let feature matching (SIFT/ORB) snap them into place.
@@ -7,14 +7,14 @@ about=Line up an aerial photo over the current QGIS map view in a before/after c
 version=0.3.0
 author=Radu Andrei & Claude
 email=
-homepage=https://raduandrei-source.github.io/qgis-auto-georeference/
-repository=https://github.com/raduandrei-source/qgis-auto-georeference
-tracker=https://github.com/raduandrei-source/qgis-auto-georeference/issues
+homepage=https://raduandrei-source.github.io/lineup-raster/
+repository=https://github.com/raduandrei-source/lineup-raster
+tracker=https://github.com/raduandrei-source/lineup-raster/issues
 category=Raster
 tags=georeferencing, georeference, aerial photo, raster, alignment, feature matching, SIFT, ORB
 experimental=False
 changelog=
-    0.3.0 - First public release
+    0.3.0 - First public release, renamed from "Auto Georeference" to LineUp Raster
     - English documentation, installation guide and help site
     - install_dependencies.py: installs OpenCV and repairs numpy only when QGIS's GDAL cannot use it
     0.2.1 - Works even if pip replaced the numpy that came with QGIS (no gdal_array); clear message + repair_dependencies.bat; installers never touch numpy

@@ -1,9 +1,9 @@
-# Auto Georeference - automated test. Authors: Radu Andrei & Claude - MIT License
+# LineUp Raster - automated test. Authors: Radu Andrei & Claude - MIT License
 """Integration test in real QGIS (3.34, offscreen): render reference, align, auto-refine, save."""
 import os, sys, math, tempfile
 os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, '..', 'qgis_auto_georeference'))
+sys.path.insert(0, os.path.join(HERE, '..', 'lineup_raster'))
 
 import numpy as np, cv2
 from osgeo import gdal, osr
@@ -13,7 +13,7 @@ from qgis.gui import QgsMapCanvas
 from qgis.PyQt.QtCore import Qt, QPoint, QPointF, QEvent
 from qgis.PyQt.QtGui import QMouseEvent, QWheelEvent
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
-import auto_georeference as ag
+import lineup_raster as ag
 
 fails = 0
 def check(name, cond, extra=''):
@@ -82,7 +82,7 @@ canvas.setLayers([layer]); canvas.setExtent(QgsRectangle(585700, 325000, 587300,
 class Iface:
     def mapCanvas(self): return canvas
     def mainWindow(self): return None
-plugin = ag.AutoGeoreferencePlugin(Iface())
+plugin = ag.LineUpRasterPlugin(Iface())
 
 ref_path = plugin.render_reference()
 rds = gdal.Open(ref_path); gt = rds.GetGeoTransform(); rw, rh = rds.RasterXSize, rds.RasterYSize

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Install (or repair) the Python libraries needed by the Auto Georeference QGIS plugin.
+Install (or repair) the Python libraries needed by the LineUp Raster QGIS plugin.
 
 Authors: Radu Andrei & Claude - MIT License
 
@@ -55,7 +55,7 @@ def fail(msg):
 
 
 def main():
-    print('Auto Georeference - dependency installer')
+    print('LineUp Raster - dependency installer')
     print(f'Python: {sys.executable}  ({sys.version.split()[0]})\n')
 
     ok, out = check('from osgeo import gdal; print(gdal.__version__)')
@@ -109,7 +109,7 @@ def main():
     if not ok:
         fail('final check failed:\n' + out[-800:])
     print(f'[4/4] OK  {out}')
-    print('\nDone. Start QGIS and use  Raster > Auto Georeference > Auto Georeference Raster.')
+    print('\nDone. Start QGIS and use  Raster > LineUp Raster > Line up and georeference a photo...')
 
 
 if __name__ == '__main__':

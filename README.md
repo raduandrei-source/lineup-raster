@@ -1,13 +1,13 @@
-# Auto Georeference – QGIS plugin
+# LineUp Raster – QGIS plugin
 
 Georeference aerial photos in QGIS: line the photo up over the map by hand in a before/after window, then let
 feature matching (SIFT / ORB) snap it precisely into place. You see the result before it is saved.
 
 **Authors:** Radu Andrei & Claude · **License:** MIT · **QGIS:** 3.16+ (tested on 3.34 and 3.40)
 
-**[User guide (help site)](https://raduandrei-source.github.io/qgis-auto-georeference/)** ·
-**[Installation](qgis_auto_georeference/INSTALLATION.md)** ·
-**[Download](https://github.com/raduandrei-source/qgis-auto-georeference/releases)**
+**[User guide (help site)](https://raduandrei-source.github.io/lineup-raster/)** ·
+**[Installation](lineup_raster/INSTALLATION.md)** ·
+**[Download](https://github.com/raduandrei-source/lineup-raster/releases)**
 
 ---
 
@@ -23,40 +23,40 @@ feature matching (SIFT / ORB) snap it precisely into place. You see the result b
 
 ## Install
 
-1. Download `qgis_auto_georeference.zip` from the
-   [Releases page](https://github.com/raduandrei-source/qgis-auto-georeference/releases) and install it in QGIS:
+1. Download `lineup_raster.zip` from the
+   [Releases page](https://github.com/raduandrei-source/lineup-raster/releases) and install it in QGIS:
    **Plugins → Manage and Install Plugins → Install from ZIP**.
 2. With QGIS closed, install OpenCV into the QGIS Python:
    - **Windows:** double-click `repair_dependencies.bat` in the plugin folder, accept the administrator prompt.
    - **Debian / Ubuntu:** `sudo apt install python3-opencv`
    - **macOS / other:** run `install_dependencies.py` with the Python that QGIS uses.
-3. Start QGIS: **Raster → Auto Georeference → Auto Georeference Raster**.
+3. Start QGIS: **Raster → LineUp Raster → Line up and georeference a photo…**.
 
 Everything else – requirements, every platform, the rules for the QGIS Python (never upgrade its numpy) and
-troubleshooting – is in **[INSTALLATION.md](qgis_auto_georeference/INSTALLATION.md)**.
+troubleshooting – is in **[INSTALLATION.md](lineup_raster/INSTALLATION.md)**.
 
 ## Repository layout
 
 | Path | Content |
 |---|---|
-| `qgis_auto_georeference/` | The plugin (this folder is what goes into the QGIS plugins folder) |
-| `qgis_auto_georeference/INSTALLATION.md` | Installation, dependencies, troubleshooting |
-| `qgis_auto_georeference/PHILOSOPHY_AND_DEVELOPMENT.md` | Design decisions, development history, lessons learned |
+| `lineup_raster/` | The plugin (this folder is what goes into the QGIS plugins folder) |
+| `lineup_raster/INSTALLATION.md` | Installation, dependencies, troubleshooting |
+| `lineup_raster/PHILOSOPHY_AND_DEVELOPMENT.md` | Design decisions, development history, lessons learned |
 | `docs/` | The help site, published with GitHub Pages |
 | `tests/` | Automated tests that run in real QGIS (headless) |
 
 ## Building the release zip
 
 ```
-zip -r qgis_auto_georeference.zip qgis_auto_georeference -x "*/__pycache__/*"
+zip -r lineup_raster.zip lineup_raster -x "*/__pycache__/*"
 ```
 
-The zip must contain the `qgis_auto_georeference` folder at its top level.
+The zip must contain the `lineup_raster` folder at its top level.
 
 ## Contributing
 
-Bug reports and suggestions are welcome in [Issues](https://github.com/raduandrei-source/qgis-auto-georeference/issues).
-For errors, please include the text from **View → Panels → Log Messages → Auto Georeference**.
+Bug reports and suggestions are welcome in [Issues](https://github.com/raduandrei-source/lineup-raster/issues).
+For errors, please include the text from **View → Panels → Log Messages → LineUp Raster**.
 
 ## License
 

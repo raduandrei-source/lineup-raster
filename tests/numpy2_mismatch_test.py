@@ -1,11 +1,11 @@
-# Auto Georeference - automated test. Authors: Radu Andrei & Claude - MIT License
+# LineUp Raster - automated test. Authors: Radu Andrei & Claude - MIT License
 """Reproduce the Windows situation: numpy 2 installed over a QGIS whose GDAL was built for
 numpy 1, and sys.stderr = None. Then run the whole plugin flow."""
 import os, sys, math, tempfile
 os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..', 'np2env'))                  # numpy 2 + opencv 4.10 first
-sys.path.insert(1, os.path.join(HERE, '..', 'qgis_auto_georeference'))
+sys.path.insert(1, os.path.join(HERE, '..', 'lineup_raster'))
 import subprocess
 NP2 = os.path.join(HERE, '..', 'np2env')
 # the user's crash: numpy 2 over QGIS's GDAL, no stderr, anything calling gdal.UseExceptions()
@@ -71,7 +71,7 @@ check("user's error reproduced with the old way of reading pixels",
       "AttributeError" in _REPRO, _REPRO)
 saved = None
 # ---- the plugin, same conditions (stderr None, numpy 2) ----
-import auto_georeference as ag
+import lineup_raster as ag
 check('plugin imports without dependency error', ag._DEPENDENCY_ERROR is None, ag._DEPENDENCY_ERROR or '')
 layer = QgsRasterLayer(base_path, 'base'); QgsProject.instance().addMapLayer(layer)
 canvas = QgsMapCanvas(); canvas.resize(1200, 800); canvas.show(); qgs.processEvents()
@@ -80,7 +80,7 @@ canvas.setExtent(QgsRectangle(585600, 325300, 587400, 326700)); qgs.processEvent
 class Iface:
     def mapCanvas(self): return canvas
     def mainWindow(self): return None
-plugin = ag.AutoGeoreferencePlugin(Iface())
+plugin = ag.LineUpRasterPlugin(Iface())
 out_path = os.path.join(tmp, 'result.tif')
 msgs = []
 QFileDialog.getOpenFileName = staticmethod(lambda *a, **k: (photo_path, ''))
@@ -111,15 +111,15 @@ check('auto-refine accurate', state.get('refined') and state.get('err', 99) < 1.
 # ---- missing OpenCV: plugin must still load and explain the fix ----
 code = f"""
 import sys, os; os.environ['QT_QPA_PLATFORM']='offscreen'
-sys.path.insert(0, {os.path.join(HERE, '..', 'qgis_auto_georeference')!r})
+sys.path.insert(0, {os.path.join(HERE, '..', 'lineup_raster')!r})
 sys.modules['cv2'] = None      # simulate: OpenCV not installed
 sys.stderr = None
 from qgis.core import QgsApplication; q = QgsApplication([], False); q.initQgis()
-import auto_georeference as ag
+import lineup_raster as ag
 from qgis.PyQt.QtWidgets import QMessageBox
 shown = []
 QMessageBox.critical = staticmethod(lambda *a, **k: shown.append(a[2]))
-ag.AutoGeoreferencePlugin(None).run()
+ag.LineUpRasterPlugin(None).run()
 print('SHOWN' if shown and 'repair_dependencies.bat' in shown[0] else 'NOT SHOWN', repr(ag._DEPENDENCY_ERROR[:60]))
 """
 r = subprocess.run([sys.executable, '-c', code], capture_output=True, text=True)

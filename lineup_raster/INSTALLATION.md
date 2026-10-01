@@ -1,19 +1,19 @@
-# Auto Georeference – Installation and setup
+# LineUp Raster – Installation and setup
 
 Everything you need to install the plugin and get georeferencing working.
-Authors: Radu Andrei & Claude · MIT License · Help site: https://raduandrei-source.github.io/qgis-auto-georeference/
+Authors: Radu Andrei & Claude · MIT License · Help site: https://raduandrei-source.github.io/lineup-raster/
 
 ---
 
 ## In short
 
-1. Download `qgis_auto_georeference.zip` from the [Releases page](https://github.com/raduandrei-source/qgis-auto-georeference/releases).
+1. Download `lineup_raster.zip` from the [Releases page](https://github.com/raduandrei-source/lineup-raster/releases).
 2. In QGIS: **Plugins → Manage and Install Plugins → Install from ZIP** → choose the zip → **Install Plugin**.
 3. Close QGIS and install OpenCV into the QGIS Python:
    - **Windows:** double-click `repair_dependencies.bat` in the plugin folder and accept the administrator prompt.
    - **Debian / Ubuntu:** `sudo apt install python3-opencv`
    - **macOS:** `/Applications/QGIS.app/Contents/MacOS/bin/python3 install_dependencies.py` (run from the plugin folder).
-4. Start QGIS, open a satellite basemap, zoom to the area of your photo and use **Raster → Auto Georeference → Auto Georeference Raster**.
+4. Start QGIS, open a satellite basemap, zoom to the area of your photo and use **Raster → LineUp Raster → Line up and georeference a photo…**.
 
 The rest of this page explains each step, what can go wrong and how to fix it.
 
@@ -37,10 +37,10 @@ The plugin itself is pure Python; nothing needs compiling.
 
 ### Option A – from the ZIP (recommended)
 
-1. Download `qgis_auto_georeference.zip` from the [Releases page](https://github.com/raduandrei-source/qgis-auto-georeference/releases).
+1. Download `lineup_raster.zip` from the [Releases page](https://github.com/raduandrei-source/lineup-raster/releases).
    Use the zip attached to a release. The green “Code → Download ZIP” button on GitHub gives the whole repository, which QGIS cannot install directly.
 2. QGIS → **Plugins → Manage and Install Plugins → Install from ZIP**, select the zip, **Install Plugin**.
-3. Make sure **Auto Georeference** is ticked in the **Installed** tab.
+3. Make sure **LineUp Raster** is ticked in the **Installed** tab.
 
 ### Option B – copy the folder by hand
 
@@ -49,12 +49,16 @@ The plugin itself is pure Python; nothing needs compiling.
    - Windows: `C:\Users\<you>\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins`
    - Linux: `~/.local/share/QGIS/QGIS3/profiles/default/python/plugins`
    - macOS: `~/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins`
-2. Copy the folder `qgis_auto_georeference` there. The folder name must stay exactly `qgis_auto_georeference`.
+2. Copy the folder `lineup_raster` there. The folder name must stay exactly `lineup_raster`.
 3. Restart QGIS and enable the plugin in **Plugins → Manage and Install Plugins → Installed**.
 
 ### Updating
 
-Close QGIS, delete the old `qgis_auto_georeference` folder from the plugins folder, then install the new version
+**Coming from the earlier name “Auto Georeference”:** close QGIS and delete the old folder
+`qgis_auto_georeference` from the plugins folder, then install LineUp Raster. Both would otherwise appear in the menu.
+
+
+Close QGIS, delete the old `lineup_raster` folder from the plugins folder, then install the new version
 (Option A or B). OpenCV stays installed; you don't need to repeat section 3.
 
 ---
@@ -83,7 +87,7 @@ The script finds QGIS in `Program Files`, loads the QGIS Python environment and 
 Start menu (right-click → *Run as administrator*) and run
 
 ```
-python "C:\Users\<you>\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\qgis_auto_georeference\install_dependencies.py"
+python "C:\Users\<you>\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\lineup_raster\install_dependencies.py"
 ```
 
 ### Debian / Ubuntu (QGIS from apt)
@@ -100,7 +104,7 @@ Ubuntu versions it refuses to write into the system Python (`externally-managed-
 Run the installer with the Python that QGIS uses:
 
 ```
-python3 ~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/qgis_auto_georeference/install_dependencies.py
+python3 ~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/lineup_raster/install_dependencies.py
 ```
 
 For a conda / mamba QGIS environment: `conda install -c conda-forge opencv` inside that environment.
@@ -108,7 +112,7 @@ For a conda / mamba QGIS environment: `conda install -c conda-forge opencv` insi
 ### macOS (official QGIS.app)
 
 ```
-cd ~/Library/Application\ Support/QGIS/QGIS3/profiles/default/python/plugins/qgis_auto_georeference
+cd ~/Library/Application\ Support/QGIS/QGIS3/profiles/default/python/plugins/lineup_raster
 /Applications/QGIS.app/Contents/MacOS/bin/python3 install_dependencies.py
 ```
 
@@ -161,7 +165,7 @@ Two version numbers and no error means everything is in place.
 
 ## 6. Use
 
-1. **Raster → Auto Georeference → Auto Georeference Raster**, choose the photo.
+1. **Raster → LineUp Raster → Line up and georeference a photo…**, choose the photo.
 2. The alignment window opens: reference (map) left of the black line, your photo right of it.
    - Drag the black line to compare. The images stay where they are; the line only reveals one or the other.
    - Drag on an image to move it (left side = reference, right side = photo). Scroll to zoom the image under the cursor.
@@ -177,7 +181,7 @@ Two version numbers and no error means everything is in place.
 
 You can also save without auto-refine; the photo is then placed exactly by your manual alignment.
 
-The full guide is on the [help site](https://raduandrei-source.github.io/qgis-auto-georeference/).
+The full guide is on the [help site](https://raduandrei-source.github.io/lineup-raster/).
 
 ---
 
@@ -186,23 +190,23 @@ The full guide is on the [help site](https://raduandrei-source.github.io/qgis-au
 | What you see | Why | What to do |
 |---|---|---|
 | `AttributeError: 'NoneType' object has no attribute 'write'` (traceback in numpy) | numpy in the QGIS Python was replaced by a version GDAL can't use | Close QGIS, run `repair_dependencies.bat` (section 3) |
-| “Auto Georeference – missing / mismatched library” | OpenCV is missing or doesn't match numpy | Section 3; the message shows the technical reason |
-| Plugin missing from the Raster menu | Not enabled, or the folder has a different name | Plugins → Manage and Install Plugins → Installed → tick it; folder must be `qgis_auto_georeference` |
+| “LineUp Raster – missing / mismatched library” | OpenCV is missing or doesn't match numpy | Section 3; the message shows the technical reason |
+| Plugin missing from the Raster menu | Not enabled, or the folder has a different name | Plugins → Manage and Install Plugins → Installed → tick it; folder must be `lineup_raster` |
 | “Please set the map rotation to 0°” | The map view is rotated | Set rotation to 0 in the status bar |
 | The reference in the window is blank or partly empty | The basemap hadn't finished loading, or there is no internet | Wait until the map is fully drawn, then start the plugin again |
 | “Auto-refine found no reliable result: the photo barely overlaps the reference” | The photo is placed outside the area shown on the map | Zoom the QGIS map to the photo's area, line the photo up first |
 | “…only N reliable matching points” / “…all in one small area” | Too few features in common (very different dates, seasons, much changed land, water, forest) | Line up more carefully, try the other detector, zoom QGIS closer; or save your manual alignment |
 | “…too different from your alignment (probably a wrong match)” | Automatic matching found something far from where you placed the photo | Check your alignment; the plugin refuses on purpose instead of guessing |
 | Result is in the wrong place on the map | The project CRS differs from what you expected | Check the project CRS before starting; the GeoTIFF is written in it |
-| Any other error | – | **View → Panels → Log Messages → “Auto Georeference”** shows the details; include them in an issue |
+| Any other error | – | **View → Panels → Log Messages → “LineUp Raster”** shows the details; include them in an issue |
 
-Report problems at https://github.com/raduandrei-source/qgis-auto-georeference/issues
+Report problems at https://github.com/raduandrei-source/lineup-raster/issues
 
 ---
 
 ## 8. Uninstall
 
-QGIS → **Plugins → Manage and Install Plugins → Installed → Auto Georeference → Uninstall Plugin**.
+QGIS → **Plugins → Manage and Install Plugins → Installed → LineUp Raster → Uninstall Plugin**.
 To remove OpenCV as well (QGIS closed, admin shell): `python -m pip uninstall opencv-python-headless`
 (or `sudo apt remove python3-opencv` on Debian/Ubuntu).
 

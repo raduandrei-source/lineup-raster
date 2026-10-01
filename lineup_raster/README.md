@@ -1,10 +1,10 @@
-# Auto Georeference – QGIS plugin
+# LineUp Raster – QGIS plugin
 
 Georeference aerial photos in two steps: line the photo up over the map by hand, then let feature matching
 snap it precisely into place.
 
 Authors: **Radu Andrei & Claude** · MIT License
-Help site: https://raduandrei-source.github.io/qgis-auto-georeference/ ·
+Help site: https://raduandrei-source.github.io/lineup-raster/ ·
 Installation: [INSTALLATION.md](INSTALLATION.md)
 
 ## What it does
@@ -21,12 +21,12 @@ Installation: [INSTALLATION.md](INSTALLATION.md)
 
 ## Quick start
 
-1. Install the plugin zip from the [Releases page](https://github.com/raduandrei-source/qgis-auto-georeference/releases)
+1. Install the plugin zip from the [Releases page](https://github.com/raduandrei-source/lineup-raster/releases)
    (Plugins → Manage and Install Plugins → Install from ZIP).
 2. Install OpenCV into the QGIS Python, with QGIS closed – Windows: double-click `repair_dependencies.bat`;
    Debian/Ubuntu: `sudo apt install python3-opencv`; details in [INSTALLATION.md](INSTALLATION.md).
 3. In QGIS, show a satellite basemap, zoom to the area of the photo (map rotation 0°).
-4. **Raster → Auto Georeference → Auto Georeference Raster**, choose the photo.
+4. **Raster → LineUp Raster → Line up and georeference a photo…**, choose the photo.
 5. Line the photo up, press **Auto-refine alignment**, check with the slider, **Save georeferenced photo…**.
 
 ## Controls in the alignment window
@@ -73,4 +73,4 @@ makes the reference sharper and the result more precise.
 
 - [INSTALLATION.md](INSTALLATION.md) – installation, dependencies, troubleshooting
 - [PHILOSOPHY_AND_DEVELOPMENT.md](PHILOSOPHY_AND_DEVELOPMENT.md) – design decisions, development history, lessons learned
-- Help site – https://raduandrei-source.github.io/qgis-auto-georeference/
+- Help site – https://raduandrei-source.github.io/lineup-raster/

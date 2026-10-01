@@ -1,6 +1,6 @@
 @echo off
 rem ---------------------------------------------------------------------------
-rem  Auto Georeference - install / repair the Python libraries for QGIS (Windows)
+rem  LineUp Raster - install / repair the Python libraries for QGIS (Windows)
 rem  Authors: Radu Andrei & Claude - MIT License
 rem
 rem  Installs OpenCV into the Python of your QGIS, and repairs numpy if something

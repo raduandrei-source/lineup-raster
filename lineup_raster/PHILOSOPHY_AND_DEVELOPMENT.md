@@ -1,4 +1,4 @@
-# Auto Georeference – philosophy, design and development history
+# LineUp Raster – philosophy, design and development history
 
 For whoever takes over the project. It explains what the plugin does, why it is built this way, what worked,
 what didn't, and what the author asked for along the way.
@@ -33,7 +33,7 @@ Three principles:
 ## 2. Workflow
 
 1. In QGIS, show the area of interest (for example Google Satellite), as close as possible to the area of the photo.
-2. `Raster → Auto Georeference → Auto Georeference Raster`, choose the photo.
+2. `Raster → LineUp Raster → Line up and georeference a photo…`, choose the photo.
 3. The plugin renders the QGIS map view as a georeferenced reference, at a higher resolution than the screen
    (up to 3000 px) for a sharper image.
 4. Alignment window: reference left of the black line, photo right of it. The user lines up the photo
@@ -69,7 +69,7 @@ Saving without auto-refine is possible; the georeference is then exactly the man
 
 ## 4. How the code is organised
 
-Everything is in `auto_georeference.py`:
+Everything is in `lineup_raster.py`:
 
 | Component | Role |
 |---|---|
@@ -78,7 +78,7 @@ Everything is in `auto_georeference.py`:
 | `read_raster` | Reads any raster through GDAL (JPG, 16-bit TIFF, palette, greyscale) |
 | `refine_alignment` | Automatic matching, starting from the manual alignment |
 | `write_georeferenced` | Writes the final GeoTIFF (GDAL Warp, north-up) |
-| `AutoGeoreferencePlugin` | QGIS integration: menu, reference rendering, saving |
+| `LineUpRasterPlugin` | QGIS integration: menu, reference rendering, saving |
 
 **The view:** each image is drawn once over the whole window; the line only copies pieces of the two drawings.
 Because of that, what is shown on each side is identical to the pixel wherever the line is, and dragging the line
@@ -251,6 +251,10 @@ The tests are in `tests/` in the repository.
     → the cause in 5.3; the plugin works with any numpy and there is a repair script.
 15. **Publish on GitHub, authors Radu Andrei & Claude, a complete installation guide, everything in English, and
     a help site.**
+
+16. **A name that doesn't repeat existing plugins.** The QGIS plugin repository already has “Auto Georeference
+    Raster”, “Magic Georeferencer”, “Smart Georeferencer”, “Freehand Georeferencer” and swipe tools. Chosen name:
+    **LineUp Raster** (before 0.3.0 the plugin was called “Auto Georeference”).
 
 **In short:** line up the photo by hand in a before/after window where the images stay put. The computer must use
 exactly that overlay to find the precise position. The result must be credible (correct scale, no deformation) and

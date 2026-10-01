@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Auto Georeference – User Guide</title>
-<meta name="description" content="User guide for Auto Georeference, a QGIS plugin to georeference aerial photos: line up by hand, then snap precisely with feature matching.">
+<title>LineUp Raster – User Guide</title>
+<meta name="description" content="User guide for LineUp Raster, a QGIS plugin to georeference aerial photos: line up by hand, then snap precisely with feature matching.">
 <style>
   :root {
     --bg: #f6f4ee;
@@ -167,18 +167,18 @@
 <body>
 
 <div id="topbar">
-  <span>Auto Georeference</span>
+  <span>LineUp Raster</span>
   <button id="menuBtn" aria-controls="sidebar" aria-expanded="false">Contents</button>
 </div>
 
 <aside id="sidebar">
   <div class="brand">
-    <div class="name">Auto Georeference</div>
+    <div class="name">LineUp Raster</div>
     <div class="tag">QGIS plugin · User guide · v0.3.0</div>
     <div class="links">
-      <a href="https://github.com/raduandrei-source/qgis-auto-georeference">GitHub</a>
-      <a href="https://github.com/raduandrei-source/qgis-auto-georeference/releases">Download</a>
-      <a href="https://github.com/raduandrei-source/qgis-auto-georeference/issues">Issues</a>
+      <a href="https://github.com/raduandrei-source/lineup-raster">GitHub</a>
+      <a href="https://github.com/raduandrei-source/lineup-raster/releases">Download</a>
+      <a href="https://github.com/raduandrei-source/lineup-raster/issues">Issues</a>
     </div>
   </div>
   <nav class="toc" id="toc">
@@ -221,7 +221,7 @@
 <main>
   <header class="hero">
     <div class="kicker">QGIS plugin · Raster</div>
-    <h1>Auto Georeference</h1>
+    <h1>LineUp Raster</h1>
     <p class="lead">Line an aerial photo up over the map by hand, then let feature matching snap it precisely into place. You see the result before it is saved.</p>
     <div class="meta">Authors: Radu Andrei &amp; Claude · MIT License · QGIS 3.16+ (tested on 3.34 and 3.40)</div>
   </header>
@@ -229,7 +229,7 @@
   <!-- ===================== GETTING STARTED ===================== -->
   <section id="intro">
     <h2>What it is</h2>
-    <p>Auto Georeference places an aerial photo (drone, plane, scanned archive photo) on the map in its correct position, rotation and scale, and saves it as a georeferenced GeoTIFF.</p>
+    <p>LineUp Raster places an aerial photo (drone, plane, scanned archive photo) on the map in its correct position, rotation and scale, and saves it as a georeferenced GeoTIFF.</p>
     <p>The usual way to do this in QGIS is the Georeferencer: you click dozens of matching points by hand on the photo and on the map. This plugin replaces that with a short, visual workflow:</p>
     <div class="steps">
       <div class="step"><h4>Reference</h4><p>The current map view is captured as a georeferenced reference image.</p></div>
@@ -275,10 +275,10 @@
 
   <section id="install">
     <h2>Installation</h2>
-    <p>Two parts: the plugin itself, and OpenCV in the Python that QGIS uses. The complete guide with all platforms is in <a href="https://github.com/raduandrei-source/qgis-auto-georeference/blob/main/qgis_auto_georeference/INSTALLATION.md">INSTALLATION.md</a>.</p>
+    <p>Two parts: the plugin itself, and OpenCV in the Python that QGIS uses. The complete guide with all platforms is in <a href="https://github.com/raduandrei-source/lineup-raster/blob/main/lineup_raster/INSTALLATION.md">INSTALLATION.md</a>.</p>
     <h3>1 · The plugin</h3>
     <ol>
-      <li>Download <code>qgis_auto_georeference.zip</code> from the <a href="https://github.com/raduandrei-source/qgis-auto-georeference/releases">Releases page</a>.</li>
+      <li>Download <code>lineup_raster.zip</code> from the <a href="https://github.com/raduandrei-source/lineup-raster/releases">Releases page</a>.</li>
       <li>QGIS → <strong>Plugins → Manage and Install Plugins → Install from ZIP</strong> → choose the zip → <strong>Install Plugin</strong>.</li>
     </ol>
     <div class="note"><strong>Note</strong><br>Use the zip attached to a release. The “Code → Download ZIP” button on GitHub downloads the whole repository, which QGIS can't install as a plugin.</div>
@@ -286,7 +286,7 @@
     <p>Close QGIS first.</p>
     <table>
       <tr><th>System</th><th>What to do</th></tr>
-      <tr><td>Windows</td><td>Open the plugin folder (<code>%APPDATA%\QGIS\QGIS3\profiles\default\python\plugins\qgis_auto_georeference</code>), double-click <code>repair_dependencies.bat</code>, accept the administrator prompt. It ends with a line starting <code>[4/4] OK</code>.</td></tr>
+      <tr><td>Windows</td><td>Open the plugin folder (<code>%APPDATA%\QGIS\QGIS3\profiles\default\python\plugins\lineup_raster</code>), double-click <code>repair_dependencies.bat</code>, accept the administrator prompt. It ends with a line starting <code>[4/4] OK</code>.</td></tr>
       <tr><td>Debian / Ubuntu</td><td><code>sudo apt install python3-opencv</code></td></tr>
       <tr><td>macOS</td><td>From the plugin folder: <code>/Applications/QGIS.app/Contents/MacOS/bin/python3 install_dependencies.py</code> (the <code>python3</code> location inside QGIS.app can vary).</td></tr>
       <tr><td>Other / conda</td><td>Run <code>install_dependencies.py</code> with the Python QGIS uses, or <code>conda install -c conda-forge opencv</code>.</td></tr>
@@ -314,7 +314,7 @@ Esri World Imagery  https://server.arcgisonline.com/ArcGIS/rest/services/World_I
   <!-- ===================== WORKFLOW ===================== -->
   <section id="workflow">
     <h2>Workflow overview</h2>
-    <p>Start the plugin from <strong>Raster → Auto Georeference → Auto Georeference Raster</strong> and choose the photo. A typical session:</p>
+    <p>Start the plugin from <strong>Raster → LineUp Raster → Line up and georeference a photo…</strong> and choose the photo. A typical session:</p>
     <ol>
       <li>The plugin renders the map view as the reference and opens the alignment window.</li>
       <li>You move, zoom and rotate the photo until it roughly matches the reference.</li>
@@ -483,15 +483,15 @@ Esri World Imagery  https://server.arcgisonline.com/ArcGIS/rest/services/World_I
     <table>
       <tr><th>What you see</th><th>Why</th><th>What to do</th></tr>
       <tr><td><code>AttributeError: 'NoneType' object has no attribute 'write'</code> with a traceback inside numpy</td><td>The numpy of the QGIS Python was replaced by one GDAL can't use</td><td>Close QGIS, run <code>repair_dependencies.bat</code></td></tr>
-      <tr><td>“Auto Georeference – missing / mismatched library”</td><td>OpenCV is missing or doesn't match numpy</td><td>See <a href="#install">Installation</a>; the message shows the technical reason</td></tr>
-      <tr><td>Plugin missing from the Raster menu</td><td>Not enabled, or the folder has another name</td><td>Plugins → Manage and Install Plugins → Installed → tick it; folder name must be <code>qgis_auto_georeference</code></td></tr>
+      <tr><td>“LineUp Raster – missing / mismatched library”</td><td>OpenCV is missing or doesn't match numpy</td><td>See <a href="#install">Installation</a>; the message shows the technical reason</td></tr>
+      <tr><td>Plugin missing from the Raster menu</td><td>Not enabled, or the folder has another name</td><td>Plugins → Manage and Install Plugins → Installed → tick it; folder name must be <code>lineup_raster</code></td></tr>
       <tr><td>“Please set the map rotation to 0°”</td><td>The map view is rotated</td><td>Set rotation to 0 in the status bar</td></tr>
       <tr><td>Reference blank or partly empty</td><td>The basemap wasn't loaded yet, or no internet</td><td>Wait until the map is drawn, start again</td></tr>
       <tr><td>“…the photo barely overlaps the reference”</td><td>The photo is outside the map view</td><td>Zoom the map to the photo's area, align first</td></tr>
       <tr><td>“…only N reliable matching points” or “…all in one small area”</td><td>Too little in common: different dates or seasons, water, forest, fields</td><td>Align more carefully, try the other detector, zoom closer, or save the manual alignment</td></tr>
       <tr><td>“…too different from your alignment”</td><td>The matching found a placement far from yours</td><td>Check your alignment; the refusal is deliberate</td></tr>
       <tr><td>Result in the wrong place</td><td>Project CRS is not the one you expected</td><td>Set the project CRS before starting</td></tr>
-      <tr><td>Anything else</td><td>–</td><td><strong>View → Panels → Log Messages → Auto Georeference</strong> has the details; please include them in an <a href="https://github.com/raduandrei-source/qgis-auto-georeference/issues">issue</a></td></tr>
+      <tr><td>Anything else</td><td>–</td><td><strong>View → Panels → Log Messages → LineUp Raster</strong> has the details; please include them in an <a href="https://github.com/raduandrei-source/lineup-raster/issues">issue</a></td></tr>
     </table>
   </section>
 
@@ -543,22 +543,22 @@ Esri World Imagery  https://server.arcgisonline.com/ArcGIS/rest/services/World_I
     <h2>Version history</h2>
     <table>
       <tr><th>Version</th><th>Changes</th></tr>
-      <tr><td>0.3.0</td><td>First public release. English documentation, installation guide and this help site. Dependency installer that repairs numpy only when needed.</td></tr>
+      <tr><td>0.3.0</td><td>First public release, renamed from “Auto Georeference” to LineUp Raster. English documentation, installation guide and this help site. Dependency installer that repairs numpy only when needed.</td></tr>
       <tr><td>0.2.1</td><td>Works even when numpy in the QGIS Python was replaced; clear message for missing libraries; Windows repair script.</td></tr>
       <tr><td>0.2.0</td><td>Auto-refine starts from the manual alignment and is shown before saving; similarity model; safety checks; GDAL reading; sharper reference; free pan and zoom.</td></tr>
       <tr><td>0.1.0</td><td>First version: comparison window and feature matching.</td></tr>
     </table>
-    <p>The design decisions and lessons learned are described in <a href="https://github.com/raduandrei-source/qgis-auto-georeference/blob/main/qgis_auto_georeference/PHILOSOPHY_AND_DEVELOPMENT.md">PHILOSOPHY_AND_DEVELOPMENT.md</a>.</p>
+    <p>The design decisions and lessons learned are described in <a href="https://github.com/raduandrei-source/lineup-raster/blob/main/lineup_raster/PHILOSOPHY_AND_DEVELOPMENT.md">PHILOSOPHY_AND_DEVELOPMENT.md</a>.</p>
   </section>
 
   <section id="credits">
     <h2>Credits &amp; license</h2>
-    <p>Auto Georeference was written by <strong>Radu Andrei &amp; Claude</strong>. It is released under the MIT License.</p>
+    <p>LineUp Raster was written by <strong>Radu Andrei &amp; Claude</strong>. It is released under the MIT License.</p>
     <p>It builds on QGIS, GDAL, OpenCV and numpy. Basemap imagery belongs to its providers and is subject to their terms.</p>
-    <p>Suggestions and bug reports are welcome on <a href="https://github.com/raduandrei-source/qgis-auto-georeference/issues">GitHub</a>.</p>
+    <p>Suggestions and bug reports are welcome on <a href="https://github.com/raduandrei-source/lineup-raster/issues">GitHub</a>.</p>
   </section>
 
-  <footer>Auto Georeference · Radu Andrei &amp; Claude · MIT License</footer>
+  <footer>LineUp Raster · Radu Andrei &amp; Claude · MIT License</footer>
 </main>
 
 <script>

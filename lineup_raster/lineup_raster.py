@@ -1,9 +1,9 @@
 """
-Auto Georeference Plugin for QGIS
+LineUp Raster Plugin for QGIS
 
 Authors: Radu Andrei & Claude
 License: MIT (see LICENSE)
-https://github.com/raduandrei-source/qgis-auto-georeference
+https://github.com/raduandrei-source/lineup-raster
 
 Workflow:
   1. The current QGIS map view is rendered as the reference image (georeferenced).
@@ -330,7 +330,7 @@ def write_georeferenced(src_path, ref_path, affine, out_path):
     has_alpha = last.GetColorInterpretation() == gdal.GCI_AlphaBand
     paletted = src_ds.GetRasterBand(1).GetColorTable() is not None
 
-    tmp_vrt = '/vsimem/auto_georef_tmp.vrt'
+    tmp_vrt = '/vsimem/lineup_raster_tmp.vrt'
     vrt = gdal.Translate(tmp_vrt, src_ds, format='VRT', GCPs=gcps, outputSRS=wkt)
     out = gdal.Warp(out_path, vrt, format='GTiff', polynomialOrder=1,
                     dstAlpha=not has_alpha, resampleAlg='near' if paletted else 'bilinear',
@@ -656,7 +656,7 @@ class AlignmentDialog(QDialog):
 
     def __init__(self, src_path, ref_path, parent=None):
         super().__init__(parent)
-        self.setWindowTitle('Georeference photo - align with reference')
+        self.setWindowTitle('LineUp Raster - line up the photo with the reference')
         self.setGeometry(50, 50, 1600, 1000)
         self.src_path = src_path
         self.ref_path = ref_path
@@ -857,7 +857,7 @@ class AlignmentDialog(QDialog):
                                                 self.get_transformation(), self.detector_engine)
         except Exception as e:
             if not isinstance(e, ValueError):      # a real error, not "no reliable result"
-                QgsMessageLog.logMessage(traceback.format_exc(), 'Auto Georeference', Qgis.Critical)
+                QgsMessageLog.logMessage(traceback.format_exc(), 'LineUp Raster', Qgis.Critical)
             self.status_label.setText(f'Auto-refine found no reliable result: {e}. '
                                       'Your alignment was kept.')
             return
@@ -903,7 +903,7 @@ class AlignmentDialog(QDialog):
 # Plugin
 # ----------------------------------------------------------------------------------
 
-class AutoGeoreferencePlugin:
+class LineUpRasterPlugin:
     """Main plugin class"""
 
     def __init__(self, iface):
@@ -912,19 +912,19 @@ class AutoGeoreferencePlugin:
         self.plugin_dir = str(Path(__file__).parent)
 
     def initGui(self):
-        self.action = QAction('Auto Georeference Raster', self.iface.mainWindow())
+        self.action = QAction('Line up and georeference a photo...', self.iface.mainWindow())
         self.action.triggered.connect(self.run)
-        self.iface.addPluginToRasterMenu('&Auto Georeference', self.action)
+        self.iface.addPluginToRasterMenu('&LineUp Raster', self.action)
         self.iface.addRasterToolBarIcon(self.action)
 
     def unload(self):
-        self.iface.removePluginRasterMenu('&Auto Georeference', self.action)
+        self.iface.removePluginRasterMenu('&LineUp Raster', self.action)
         self.iface.removeRasterToolBarIcon(self.action)
 
     def run(self):
         if _DEPENDENCY_ERROR:
-            QgsMessageLog.logMessage(_DEPENDENCY_ERROR, 'Auto Georeference', Qgis.Critical)
-            QMessageBox.critical(None, 'Auto Georeference - missing / mismatched library',
+            QgsMessageLog.logMessage(_DEPENDENCY_ERROR, 'LineUp Raster', Qgis.Critical)
+            QMessageBox.critical(None, 'LineUp Raster - missing / mismatched library',
                                  f'{DEPENDENCY_HELP}\n\nTechnical reason:\n{_DEPENDENCY_ERROR[:600]}')
             return
         try:
@@ -975,9 +975,9 @@ class AutoGeoreferencePlugin:
         except Exception as e:
             QApplication.restoreOverrideCursor()
             # log the details (never print: on Windows QGIS stderr is None)
-            QgsMessageLog.logMessage(traceback.format_exc(), 'Auto Georeference', Qgis.Critical)
+            QgsMessageLog.logMessage(traceback.format_exc(), 'LineUp Raster', Qgis.Critical)
             QMessageBox.critical(None, 'Error', f'Error:\n{str(e)}\n\n'
-                                 'Details: View → Panels → Log Messages → "Auto Georeference".')
+                                 'Details: View → Panels → Log Messages → "LineUp Raster".')
 
     def render_reference(self):
         """Render the current map view to a georeferenced GeoTIFF.
