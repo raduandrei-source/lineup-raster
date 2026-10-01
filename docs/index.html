@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auto Georeference – User Guide</title>
+<meta name="description" content="User guide for Auto Georeference, a QGIS plugin to georeference aerial photos: line up by hand, then snap precisely with feature matching.">
+<style>
+  :root {
+    --bg: #f6f4ee;
+    --paper: #fffdf8;
+    --panel: #1b2226;
+    --panel-text: #cdd5d8;
+    --panel-dim: #7c8a90;
+    --panel-rule: #2f3a40;
+    --accent: #2f6b7a;
+    --accent-bright: #4a97a8;
+    --ochre: #a8742c;
+    --ink: #1f2427;
+    --ink-soft: #4b5357;
+    --rule: #dcd6c8;
+    --code-bg: #ebe6da;
+    --warn-bg: #f7ead9;
+    --warn: #8e5418;
+    --ok-bg: #e5efe9;
+    --ok: #2f6a4a;
+    --sidebar-w: 290px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 20px; }
+  body {
+    margin: 0;
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.65;
+    font-size: 17px;
+  }
+  a { color: var(--accent); }
+  a:hover { color: var(--accent-bright); }
+
+  /* ---------- Sidebar ---------- */
+  #sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: var(--sidebar-w);
+    background: var(--panel);
+    color: var(--panel-text);
+    overflow-y: auto;
+    padding: 28px 0 40px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    z-index: 20;
+  }
+  #sidebar::-webkit-scrollbar { width: 8px; }
+  #sidebar::-webkit-scrollbar-thumb { background: #34424a; border-radius: 4px; }
+  .brand { padding: 0 24px 20px; border-bottom: 1px solid var(--panel-rule); margin-bottom: 12px; }
+  .brand .name { font-family: "Iowan Old Style", Georgia, serif; font-size: 22px; color: #eef3f4; }
+  .brand .tag { font-size: 11.5px; color: var(--panel-dim); margin-top: 4px; text-transform: uppercase; letter-spacing: 1.2px; }
+  .brand .links { margin-top: 12px; font-size: 13px; }
+  .brand .links a { color: var(--accent-bright); text-decoration: none; margin-right: 12px; }
+  .brand .links a:hover { text-decoration: underline; }
+  nav.toc { padding: 0 12px; }
+  nav.toc .group-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1.3px;
+    color: var(--panel-dim); padding: 16px 12px 6px;
+  }
+  nav.toc a {
+    display: block; padding: 6px 12px; margin: 1px 0;
+    color: var(--panel-text); text-decoration: none; font-size: 14px;
+    border-left: 3px solid transparent; border-radius: 0 4px 4px 0;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  nav.toc a:hover { background: #242e33; color: #fff; }
+  nav.toc a.active { background: #22343a; color: #fff; border-left-color: var(--accent-bright); }
+
+  /* ---------- Mobile bar ---------- */
+  #topbar {
+    display: none; position: sticky; top: 0; z-index: 30;
+    background: var(--panel); color: #eef3f4;
+    padding: 12px 16px; align-items: center; justify-content: space-between;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  #topbar button {
+    background: none; border: 1px solid #44535b; color: #eef3f4;
+    border-radius: 6px; padding: 6px 12px; font-size: 14px; cursor: pointer;
+  }
+
+  /* ---------- Content ---------- */
+  main { margin-left: var(--sidebar-w); padding: 56px 64px 120px; max-width: calc(var(--sidebar-w) + 920px); }
+  header.hero { border-bottom: 1px solid var(--rule); padding-bottom: 28px; margin-bottom: 8px; }
+  header.hero .kicker { font-family: -apple-system, "Segoe UI", sans-serif; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ochre); }
+  header.hero h1 { font-size: 42px; line-height: 1.15; margin: 10px 0 12px; font-weight: normal; }
+  header.hero p.lead { font-size: 20px; color: var(--ink-soft); margin: 0; max-width: 720px; }
+  header.hero .meta { margin-top: 16px; font-size: 14px; color: var(--ink-soft); font-family: -apple-system, "Segoe UI", sans-serif; }
+  section { padding-top: 36px; }
+  h2 { font-size: 29px; font-weight: normal; margin: 0 0 14px; padding-top: 8px; border-top: 1px solid var(--rule); padding-top: 28px; }
+  section:first-of-type h2 { border-top: none; }
+  h3 { font-size: 20px; margin: 26px 0 8px; }
+  p, li { max-width: 760px; }
+  ul, ol { padding-left: 24px; }
+  li { margin: 4px 0; }
+  code, kbd {
+    font-family: "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 0.84em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px;
+  }
+  kbd { border: 1px solid #cfc7b4; border-bottom-width: 2px; background: var(--paper); }
+  pre {
+    background: var(--panel); color: #e4ebee; padding: 14px 18px; border-radius: 8px;
+    overflow-x: auto; max-width: 820px; font-size: 14px; line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+  table { border-collapse: collapse; margin: 14px 0 6px; max-width: 860px; width: 100%; font-size: 15.5px; background: var(--paper); }
+  th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--rule); }
+  th { font-family: -apple-system, "Segoe UI", sans-serif; font-size: 12.5px; text-transform: uppercase; letter-spacing: .8px; color: var(--ink-soft); background: #efeadf; }
+  .note, .warn, .ok {
+    max-width: 800px; padding: 12px 16px; border-radius: 8px; margin: 16px 0; font-size: 16px;
+    border-left: 4px solid;
+  }
+  .note { background: #e6eff1; border-color: var(--accent); }
+  .warn { background: var(--warn-bg); border-color: var(--ochre); }
+  .ok { background: var(--ok-bg); border-color: var(--ok); }
+  .note strong:first-child, .warn strong:first-child, .ok strong:first-child { font-family: -apple-system, "Segoe UI", sans-serif; font-size: 13px; text-transform: uppercase; letter-spacing: .8px; }
+
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-width: 880px; margin: 22px 0 8px; counter-reset: step; }
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 14px 12px; position: relative; }
+  .step::before {
+    counter-increment: step; content: counter(step);
+    display: inline-flex; width: 26px; height: 26px; border-radius: 50%;
+    align-items: center; justify-content: center; background: var(--accent); color: #fff;
+    font-family: -apple-system, "Segoe UI", sans-serif; font-size: 13px; font-weight: 600;
+  }
+  .step h4 { margin: 8px 0 4px; font-size: 16.5px; }
+  .step p { margin: 0; font-size: 14.5px; color: var(--ink-soft); }
+
+  .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; max-width: 880px; margin: 16px 0; }
+  .card { background: var(--paper); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; }
+  .card h4 { margin: 0 0 6px; font-size: 17px; }
+  .card p, .card li { font-size: 15px; margin: 4px 0; }
+  .card ul { margin: 6px 0 0; padding-left: 20px; }
+
+  dl.glossary dt { font-weight: bold; margin-top: 14px; }
+  dl.glossary dd { margin: 2px 0 0 0; max-width: 760px; color: var(--ink-soft); }
+
+  /* view diagram */
+  .figure { max-width: 820px; margin: 18px 0 6px; }
+  .figure svg { width: 100%; height: auto; display: block; }
+  .figure .cap { font-size: 14px; color: var(--ink-soft); margin-top: 6px; }
+
+  footer { margin-top: 70px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 14px; color: var(--ink-soft); font-family: -apple-system, "Segoe UI", sans-serif; }
+
+  @media (max-width: 1000px) {
+    main { padding: 40px 32px 100px; }
+    .steps { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 820px) {
+    #topbar { display: flex; }
+    #sidebar { top: var(--topbar-h, 58px); transform: translateX(-100%); transition: transform .2s; width: 82%; max-width: 320px; }
+    #sidebar.open { transform: translateX(0); box-shadow: 0 0 40px rgba(0,0,0,.4); }
+    main { margin-left: 0; padding: 26px 16px 80px; }
+    header.hero h1 { font-size: 32px; }
+    header.hero p.lead { font-size: 18px; }
+    h2 { font-size: 25px; }
+    .steps, .cards { grid-template-columns: 1fr; }
+    table { font-size: 14.5px; display: block; overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <span>Auto Georeference</span>
+  <button id="menuBtn" aria-controls="sidebar" aria-expanded="false">Contents</button>
+</div>
+
+<aside id="sidebar">
+  <div class="brand">
+    <div class="name">Auto Georeference</div>
+    <div class="tag">QGIS plugin · User guide · v0.3.0</div>
+    <div class="links">
+      <a href="https://github.com/raduandrei-source/qgis-auto-georeference">GitHub</a>
+      <a href="https://github.com/raduandrei-source/qgis-auto-georeference/releases">Download</a>
+      <a href="https://github.com/raduandrei-source/qgis-auto-georeference/issues">Issues</a>
+    </div>
+  </div>
+  <nav class="toc" id="toc">
+    <div class="group-label">Getting started</div>
+    <a href="#intro">What it is</a>
+    <a href="#philosophy">Philosophy</a>
+    <a href="#audience">Who it's for</a>
+    <a href="#install">Installation</a>
+    <a href="#prepare">Preparing QGIS</a>
+
+    <div class="group-label">Workflow</div>
+    <a href="#workflow">Overview</a>
+    <a href="#step-reference">1 · Reference</a>
+    <a href="#step-align">2 · Manual alignment</a>
+    <a href="#step-refine">3 · Auto-refine</a>
+    <a href="#step-save">4 · Save</a>
+
+    <div class="group-label">Concepts</div>
+    <a href="#masking">The masking line</a>
+    <a href="#navigation">Navigation &amp; match width</a>
+    <a href="#detectors">SIFT and ORB</a>
+    <a href="#model">Placement model</a>
+    <a href="#safety">Safety checks</a>
+    <a href="#precision">Precision</a>
+
+    <div class="group-label">Guidance</div>
+    <a href="#tips">Tips for good results</a>
+    <a href="#scenarios">Scenarios</a>
+
+    <div class="group-label">Reference</div>
+    <a href="#troubleshooting">Troubleshooting</a>
+    <a href="#dependencies">Python dependencies</a>
+    <a href="#limitations">Limitations</a>
+    <a href="#glossary">Glossary</a>
+    <a href="#history">Version history</a>
+    <a href="#credits">Credits &amp; license</a>
+  </nav>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="kicker">QGIS plugin · Raster</div>
+    <h1>Auto Georeference</h1>
+    <p class="lead">Line an aerial photo up over the map by hand, then let feature matching snap it precisely into place. You see the result before it is saved.</p>
+    <div class="meta">Authors: Radu Andrei &amp; Claude · MIT License · QGIS 3.16+ (tested on 3.34 and 3.40)</div>
+  </header>
+
+  <!-- ===================== GETTING STARTED ===================== -->
+  <section id="intro">
+    <h2>What it is</h2>
+    <p>Auto Georeference places an aerial photo (drone, plane, scanned archive photo) on the map in its correct position, rotation and scale, and saves it as a georeferenced GeoTIFF.</p>
+    <p>The usual way to do this in QGIS is the Georeferencer: you click dozens of matching points by hand on the photo and on the map. This plugin replaces that with a short, visual workflow:</p>
+    <div class="steps">
+      <div class="step"><h4>Reference</h4><p>The current map view is captured as a georeferenced reference image.</p></div>
+      <div class="step"><h4>Align by hand</h4><p>In a before/after window you place the photo roughly over the reference.</p></div>
+      <div class="step"><h4>Auto-refine</h4><p>Feature matching finds hundreds of common points and snaps the photo into place.</p></div>
+      <div class="step"><h4>Save</h4><p>The photo is written as a north-up GeoTIFF and added to the map.</p></div>
+    </div>
+  </section>
+
+  <section id="philosophy">
+    <h2>Philosophy</h2>
+    <p>The work is split between the person and the computer, each doing what they do well. A person recognises within seconds that a photo shows a particular neighbourhood and roughly how it is turned. An algorithm struggles with exactly that when the images differ in scale, orientation, season or decade, yet it is excellent at the last few metres, where a person would spend most of the time.</p>
+    <h3>Three principles</h3>
+    <ol>
+      <li><strong>Your alignment is used.</strong> The automatic step starts from where you put the photo and only searches nearby. This makes it faster and far more reliable.</li>
+      <li><strong>What you see is what gets saved.</strong> The automatic result appears in the same window. You can compare it with the masking line and undo it before anything is written.</li>
+      <li><strong>No result is better than a wrong result.</strong> When the matching is unsure, the plugin tells you why and keeps your alignment unchanged.</li>
+    </ol>
+  </section>
+
+  <section id="audience">
+    <h2>Who it's for</h2>
+    <div class="cards">
+      <div class="card">
+        <h4>A good fit</h4>
+        <ul>
+          <li>Architects, urban planners and heritage specialists placing aerial or drone photos on a map.</li>
+          <li>Archive work: scanned aerial photos from past decades over current satellite imagery.</li>
+          <li>Anyone who needs a photo placed quickly and accurately enough for overlays, analysis or drawings.</li>
+          <li>Near-vertical photos (camera pointing roughly straight down).</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Look elsewhere</h4>
+        <ul>
+          <li>Strongly oblique photos and mountainous terrain: these need perspective or terrain correction (orthorectification).</li>
+          <li>Survey-grade work with known accuracy requirements: use control points measured in the field.</li>
+          <li>Hand-drawn maps and plans: the manual alignment works, auto-refine usually won't (see <a href="#scenarios">Scenarios</a>).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="install">
+    <h2>Installation</h2>
+    <p>Two parts: the plugin itself, and OpenCV in the Python that QGIS uses. The complete guide with all platforms is in <a href="https://github.com/raduandrei-source/qgis-auto-georeference/blob/main/qgis_auto_georeference/INSTALLATION.md">INSTALLATION.md</a>.</p>
+    <h3>1 · The plugin</h3>
+    <ol>
+      <li>Download <code>qgis_auto_georeference.zip</code> from the <a href="https://github.com/raduandrei-source/qgis-auto-georeference/releases">Releases page</a>.</li>
+      <li>QGIS → <strong>Plugins → Manage and Install Plugins → Install from ZIP</strong> → choose the zip → <strong>Install Plugin</strong>.</li>
+    </ol>
+    <div class="note"><strong>Note</strong><br>Use the zip attached to a release. The “Code → Download ZIP” button on GitHub downloads the whole repository, which QGIS can't install as a plugin.</div>
+    <h3>2 · OpenCV</h3>
+    <p>Close QGIS first.</p>
+    <table>
+      <tr><th>System</th><th>What to do</th></tr>
+      <tr><td>Windows</td><td>Open the plugin folder (<code>%APPDATA%\QGIS\QGIS3\profiles\default\python\plugins\qgis_auto_georeference</code>), double-click <code>repair_dependencies.bat</code>, accept the administrator prompt. It ends with a line starting <code>[4/4] OK</code>.</td></tr>
+      <tr><td>Debian / Ubuntu</td><td><code>sudo apt install python3-opencv</code></td></tr>
+      <tr><td>macOS</td><td>From the plugin folder: <code>/Applications/QGIS.app/Contents/MacOS/bin/python3 install_dependencies.py</code> (the <code>python3</code> location inside QGIS.app can vary).</td></tr>
+      <tr><td>Other / conda</td><td>Run <code>install_dependencies.py</code> with the Python QGIS uses, or <code>conda install -c conda-forge opencv</code>.</td></tr>
+    </table>
+    <h3>Check</h3>
+    <p>In QGIS → <strong>Plugins → Python Console</strong>:</p>
+<pre><code>import cv2, numpy; from osgeo import gdal_array; print(cv2.__version__, numpy.__version__)</code></pre>
+    <p>Two version numbers and no error: you're ready.</p>
+    <div class="warn"><strong>Important</strong><br>Never run <code>pip install --upgrade numpy</code> in the QGIS Python. QGIS's GDAL is built for the numpy that ships with QGIS; replacing it breaks GDAL. See <a href="#dependencies">Python dependencies</a>.</div>
+  </section>
+
+  <section id="prepare">
+    <h2>Preparing QGIS</h2>
+    <ol>
+      <li><strong>Add a satellite basemap.</strong> Browser panel → right-click <em>XYZ Tiles</em> → <em>New Connection</em>, for example:
+<pre><code>Google Satellite    https://mt1.google.com/vt/lyrs=s&amp;x={x}&amp;y={y}&amp;z={z}
+Esri World Imagery  https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}</code></pre>
+        Respect the provider's terms of use. Any layer works as a reference: your own orthophoto, a cadastral map, OpenStreetMap.</li>
+      <li><strong>Set the project CRS</strong> (bottom right of the QGIS window) to the system you want the result in. For Romania, for example, Stereo 70 – EPSG:3844.</li>
+      <li><strong>Map rotation 0°</strong> (status bar).</li>
+      <li><strong>Zoom to the area of the photo</strong> so it fills most of the view, and wait until the basemap has finished loading.</li>
+    </ol>
+  </section>
+
+  <!-- ===================== WORKFLOW ===================== -->
+  <section id="workflow">
+    <h2>Workflow overview</h2>
+    <p>Start the plugin from <strong>Raster → Auto Georeference → Auto Georeference Raster</strong> and choose the photo. A typical session:</p>
+    <ol>
+      <li>The plugin renders the map view as the reference and opens the alignment window.</li>
+      <li>You move, zoom and rotate the photo until it roughly matches the reference.</li>
+      <li>You press <strong>Auto-refine alignment</strong> and check the result with the masking line.</li>
+      <li>You press <strong>Save georeferenced photo…</strong> and choose where to write the GeoTIFF.</li>
+    </ol>
+    <p>A careful manual alignment takes a minute or two; auto-refine takes about 3 seconds with ORB and 8 with SIFT for a 12-megapixel photo.</p>
+  </section>
+
+  <section id="step-reference">
+    <h2>1 · Reference</h2>
+    <p>When you start the plugin, it renders exactly what the QGIS map shows, at up to 3000 px on the long side. This is usually two to three times sharper than the screen, which gives feature matching more detail to work with. The rendered image carries the map's coordinates and CRS.</p>
+    <ul>
+      <li>Everything visible on the map ends up in the reference, so hide labels, vector layers and anything else that isn't imagery.</li>
+      <li>The reference is limited to the map view: the photo should fall inside it.</li>
+      <li>A closer map view gives a sharper reference and a more precise final result.</li>
+    </ul>
+  </section>
+
+  <section id="step-align">
+    <h2>2 · Manual alignment</h2>
+    <p>The alignment window shows the reference and the photo on top of each other. Left of the black line you see the reference, right of it the photo.</p>
+    <div class="figure">
+      <svg viewBox="0 0 820 250" role="img" aria-label="The masking line: reference on the left, photo on the right, images stay fixed">
+        <rect x="0" y="0" width="820" height="250" rx="10" fill="#1b2226"/>
+        <rect x="40" y="25" width="740" height="200" fill="#5b7a62"/>
+        <g fill="#7f9c84"><rect x="80" y="55" width="90" height="60"/><rect x="200" y="140" width="120" height="55"/><rect x="250" y="45" width="60" height="70"/><rect x="560" y="60" width="110" height="50"/><rect x="620" y="140" width="100" height="60"/></g>
+        <path d="M40 125 L780 120" stroke="#d9d2bd" stroke-width="10"/>
+        <path d="M360 25 L380 225" stroke="#d9d2bd" stroke-width="8"/>
+        <rect x="410" y="25" width="370" height="200" fill="#b9ad93" opacity="0.92"/>
+        <g fill="#cfc5ad"><rect x="560" y="60" width="110" height="50"/><rect x="620" y="140" width="100" height="60"/><rect x="430" y="40" width="70" height="55"/></g>
+        <path d="M410 122 L780 120" stroke="#efe9da" stroke-width="10"/>
+        <line x1="410" y1="10" x2="410" y2="240" stroke="#000" stroke-width="3"/>
+        <circle cx="410" cy="125" r="11" fill="#fff" stroke="#000" stroke-width="2"/>
+        <text x="58" y="215" fill="#fff" font-family="sans-serif" font-size="15">Reference (map)</text>
+        <text x="650" y="215" fill="#1b2226" font-family="sans-serif" font-size="15">Your photo</text>
+        <text x="420" y="246" fill="#cdd5d8" font-family="sans-serif" font-size="12">drag the line: only the visible part changes</text>
+      </svg>
+      <div class="cap">The images keep their place; the line decides which one you see on each side.</div>
+    </div>
+    <h3>Controls</h3>
+    <table>
+      <tr><th>Action</th><th>Effect</th></tr>
+      <tr><td>Drag the black line</td><td>Reveals more of the reference or of the photo. Neither image moves.</td></tr>
+      <tr><td>Drag left of the line</td><td>Moves the reference.</td></tr>
+      <tr><td>Drag right of the line</td><td>Moves the photo.</td></tr>
+      <tr><td>Mouse wheel</td><td>Zooms the image under the cursor, around the cursor.</td></tr>
+      <tr><td><kbd>Shift</kbd> + drag / wheel</td><td>Moves / zooms both images together. The alignment stays the same; use it to inspect details.</td></tr>
+      <tr><td>Rotate photo</td><td>Rotates the photo around its centre in 0.1° steps.</td></tr>
+      <tr><td>Fit view</td><td>Brings everything back into the window and keeps the alignment.</td></tr>
+      <tr><td>Start over</td><td>Both images back to “match width”, rotation 0, alignment reset.</td></tr>
+      <tr><td>Photo over reference</td><td>Draws the photo semi-transparent over the reference side as well.</td></tr>
+      <tr><td>Sat / Bright</td><td>Colour adjustments for each image, for your eyes only.</td></tr>
+    </table>
+    <h3>How to align quickly</h3>
+    <ol>
+      <li>Find two landmarks far apart that appear in both images (a crossroads, a church, a bridge).</li>
+      <li>Rotate the photo until the direction between them matches.</li>
+      <li>Zoom the photo until their distance matches.</li>
+      <li>Move the photo so the first landmark sits on top of itself, then sweep the line across to check.</li>
+    </ol>
+    <p>Ten or twenty metres off is fine: auto-refine takes it from there.</p>
+  </section>
+
+  <section id="step-refine">
+    <h2>3 · Auto-refine</h2>
+    <p>Choose a detector (SIFT or ORB) and press <strong>Auto-refine alignment</strong>. The plugin:</p>
+    <ol>
+      <li>warps the photo with your alignment, so it has the scale and orientation of the reference;</li>
+      <li>equalises local contrast in both images (CLAHE);</li>
+      <li>detects distinctive points and pairs each photo point only with reference points near the position your alignment gives it (two passes, wide then narrow);</li>
+      <li>keeps the pairs that agree on one common placement (RANSAC);</li>
+      <li>runs the <a href="#safety">safety checks</a>, then moves the photo in the window.</li>
+    </ol>
+    <p>The status line reports the number of matching points, the estimated error in reference pixels, and how much the photo was moved, scaled and rotated compared with your alignment. Sweep the line across the image to check edges, roads and buildings. <strong>Undo auto-refine</strong> returns to your alignment; you can adjust and refine again.</p>
+    <div class="ok"><strong>Good sign</strong><br>Hundreds of points, an error around one pixel or less, and a small correction (a few metres, a fraction of a degree).</div>
+  </section>
+
+  <section id="step-save">
+    <h2>4 · Save</h2>
+    <p><strong>Save georeferenced photo…</strong> asks for a file name and writes a GeoTIFF:</p>
+    <ul>
+      <li>north-up, in the project CRS, with transparent corners (alpha band), compressed;</li>
+      <li>placed exactly as shown in the window, by position, rotation and uniform scale;</li>
+      <li>added to the map as a new layer.</li>
+    </ul>
+    <p>The final message shows the photo's pixel size, for example <code>0.3 meters</code>. If that number is far from what you expect for the photo, the scale is wrong; check the alignment.</p>
+    <p>Saving without auto-refine is allowed: the photo is then placed by your manual alignment alone.</p>
+  </section>
+
+  <!-- ===================== CONCEPTS ===================== -->
+  <section id="masking">
+    <h2>The masking line</h2>
+    <p>Each image has its own position on screen: a centre, a zoom and (for the photo) a rotation. The black line is only a mask that decides which image is visible on each side. That is why dragging the line never moves anything, and why what you see on each side stays identical to the pixel wherever the line is.</p>
+    <p>Near the line there is a small dead zone so you don't move an image by accident: within 15 px you grab the line, between 15 and 20 px nothing happens, beyond 20 px you move the image on that side.</p>
+  </section>
+
+  <section id="navigation">
+    <h2>Navigation &amp; match width</h2>
+    <p>When the window opens, both images are scaled to the width of the window (“match width”), with their proportions kept. If an image is taller than the window, the rest is reached by panning.</p>
+    <p>Pan and zoom are free at any zoom level. Where an image ends, the window shows black. A 40 px strip of each image always stays on screen so an image can't get lost. <strong>Fit view</strong> brings everything back while keeping the alignment; <strong>Start over</strong> resets it.</p>
+  </section>
+
+  <section id="detectors">
+    <h2>SIFT and ORB</h2>
+    <div class="cards">
+      <div class="card"><h4>SIFT (default)</h4><p>More precise and more tolerant of differences in lighting, season and image quality. About 8 seconds for a 12-megapixel photo.</p></div>
+      <div class="card"><h4>ORB</h4><p>About three times faster and often finds more points on sharp, recent imagery. Less tolerant of large differences between the images.</p></div>
+    </div>
+    <p>Try SIFT first. If it refuses, try ORB, and the other way round. Both work on greyscale with local contrast equalisation, so uniform differences in brightness or contrast hardly matter. The colour sliders in the window have no effect on matching.</p>
+  </section>
+
+  <section id="model">
+    <h2>Placement model</h2>
+    <p>The photo is placed with a <strong>similarity transformation</strong>: move, rotate and scale uniformly (four parameters). That is the same freedom you have in the window, which is what makes “what you see is what gets saved” possible.</p>
+    <p>A similarity can't shear or stretch the photo, so a bad match can't produce a deformed result. The trade-off: perspective in oblique photos and displacement caused by relief are not corrected (see <a href="#limitations">Limitations</a>).</p>
+  </section>
+
+  <section id="safety">
+    <h2>Safety checks</h2>
+    <p>Auto-refine refuses its own result, keeps your alignment and tells you the reason when:</p>
+    <ul>
+      <li>the photo barely overlaps the reference (it is outside the map view);</li>
+      <li>fewer than 12 consistent matching points were found;</li>
+      <li>all matching points sit in one small part of the photo, which would make rotation and scale unreliable;</li>
+      <li>the result differs too much from your alignment: scale by more than about 20%, rotation by more than 10°, or a shift of more than 15% of the image. This usually means a wrong match.</li>
+    </ul>
+  </section>
+
+  <section id="precision">
+    <h2>Precision</h2>
+    <p>In automated tests auto-refine places the photo within one pixel of the reference, starting from a manual alignment that was off by 5% in scale, 3° in rotation and about 50 pixels. The precision is tied to the reference: with the map zoomed so that one reference pixel is 0.5 m, expect roughly half a metre.</p>
+    <p>To improve it, zoom the QGIS map closer to the photo before starting, and use the best imagery available as the reference. Remember that the basemap itself has its own positional accuracy.</p>
+  </section>
+
+  <!-- ===================== GUIDANCE ===================== -->
+  <section id="tips">
+    <h2>Tips for good results</h2>
+    <ul>
+      <li>Zoom the map so the photo's area fills most of the view.</li>
+      <li>Hide labels and vector layers before starting; they end up in the reference.</li>
+      <li>Wait until the basemap is fully loaded; blank tiles in the reference mean nothing to match there.</li>
+      <li>Crop scanner borders, frames and film edges from archive photos before using them.</li>
+      <li>Align on features that are unlikely to have changed: road junctions, old buildings, rivers, railways.</li>
+      <li>After auto-refine, sweep the line slowly across roads and building edges; a correct result makes them continue seamlessly.</li>
+      <li>If auto-refine refuses, improve the manual alignment a little and try again, or switch detector.</li>
+      <li>For a batch of photos from the same flight, keep the QGIS project open and move the map between photos.</li>
+    </ul>
+  </section>
+
+  <section id="scenarios">
+    <h2>Scenarios</h2>
+    <div class="cards">
+      <div class="card"><h4>Recent drone or plane photo</h4><p>The easiest case. Rough alignment, SIFT or ORB, usually hundreds or thousands of points. Check the pixel size in the final message.</p></div>
+      <div class="card"><h4>Archive aerial photo (decades old)</h4><p>Align on features that still exist. SIFT copes better with the differences. If too much has changed, auto-refine refuses; you can still save your manual alignment, and zooming in with <kbd>Shift</kbd> + wheel helps make it careful.</p></div>
+      <div class="card"><h4>16-bit or black-and-white scan</h4><p>Supported directly. The plugin stretches 16-bit data for display and matching; the saved GeoTIFF keeps the original values.</p></div>
+      <div class="card"><h4>Photo covering a large area</h4><p>Zoom the map out until the whole photo fits in the view. A closer view gives more precision; auto-refine only needs the part of the photo that falls inside the view, as long as it is a good share of the photo.</p></div>
+      <div class="card"><h4>Oblique photo</h4><p>The photo can be aligned in one area, while other parts drift because of perspective. Use the Georeferencer with a projective or thin plate spline transformation for these.</p></div>
+      <div class="card"><h4>Old maps and plans</h4><p>The manual alignment works; save it directly. Auto-refine usually refuses because a drawing and a satellite photo have little visual texture in common. A drawn reference (OpenStreetMap, cadastre) helps your eye.</p></div>
+    </div>
+  </section>
+
+  <!-- ===================== REFERENCE ===================== -->
+  <section id="troubleshooting">
+    <h2>Troubleshooting</h2>
+    <table>
+      <tr><th>What you see</th><th>Why</th><th>What to do</th></tr>
+      <tr><td><code>AttributeError: 'NoneType' object has no attribute 'write'</code> with a traceback inside numpy</td><td>The numpy of the QGIS Python was replaced by one GDAL can't use</td><td>Close QGIS, run <code>repair_dependencies.bat</code></td></tr>
+      <tr><td>“Auto Georeference – missing / mismatched library”</td><td>OpenCV is missing or doesn't match numpy</td><td>See <a href="#install">Installation</a>; the message shows the technical reason</td></tr>
+      <tr><td>Plugin missing from the Raster menu</td><td>Not enabled, or the folder has another name</td><td>Plugins → Manage and Install Plugins → Installed → tick it; folder name must be <code>qgis_auto_georeference</code></td></tr>
+      <tr><td>“Please set the map rotation to 0°”</td><td>The map view is rotated</td><td>Set rotation to 0 in the status bar</td></tr>
+      <tr><td>Reference blank or partly empty</td><td>The basemap wasn't loaded yet, or no internet</td><td>Wait until the map is drawn, start again</td></tr>
+      <tr><td>“…the photo barely overlaps the reference”</td><td>The photo is outside the map view</td><td>Zoom the map to the photo's area, align first</td></tr>
+      <tr><td>“…only N reliable matching points” or “…all in one small area”</td><td>Too little in common: different dates or seasons, water, forest, fields</td><td>Align more carefully, try the other detector, zoom closer, or save the manual alignment</td></tr>
+      <tr><td>“…too different from your alignment”</td><td>The matching found a placement far from yours</td><td>Check your alignment; the refusal is deliberate</td></tr>
+      <tr><td>Result in the wrong place</td><td>Project CRS is not the one you expected</td><td>Set the project CRS before starting</td></tr>
+      <tr><td>Anything else</td><td>–</td><td><strong>View → Panels → Log Messages → Auto Georeference</strong> has the details; please include them in an <a href="https://github.com/raduandrei-source/qgis-auto-georeference/issues">issue</a></td></tr>
+    </table>
+  </section>
+
+  <section id="dependencies">
+    <h2>Python dependencies</h2>
+    <p>QGIS has its own Python, with its own GDAL and numpy. The plugin adds one library, OpenCV, and follows a few rules to stay out of trouble:</p>
+    <ul>
+      <li>numpy and GDAL are used as they come with QGIS. QGIS's GDAL is compiled for that numpy version.</li>
+      <li>OpenCV is installed as <code>opencv-python-headless==4.10.0.84</code> with <code>--no-deps</code>, so pip can't pull in another numpy. This version works with numpy 1 and 2.</li>
+      <li>Only one OpenCV package should be installed; <code>opencv-python</code> and <code>opencv-python-headless</code> conflict.</li>
+      <li>On Windows, pip should run from the OSGeo4W Shell or <code>repair_dependencies.bat</code>. Inside the QGIS Python Console, <code>sys.executable</code> is QGIS itself.</li>
+      <li>Change packages with QGIS closed; Windows locks the files of loaded libraries.</li>
+    </ul>
+    <p><code>install_dependencies.py</code> (run by <code>repair_dependencies.bat</code> on Windows) does all of this: it checks GDAL, repairs numpy only if GDAL can't use it, installs OpenCV only if a working one is missing, and finishes with a check. Running it twice changes nothing the second time.</p>
+    <p>The plugin itself reads and writes pixels without GDAL's numpy module, so it keeps working even in a Python where numpy was replaced.</p>
+  </section>
+
+  <section id="limitations">
+    <h2>Limitations</h2>
+    <ul>
+      <li>Position, rotation and uniform scale only. Perspective of oblique photos and relief are not corrected.</li>
+      <li>The QGIS map rotation must be 0°.</li>
+      <li>The reference covers only the current map view, rendered up to 3000 px.</li>
+      <li>Auto-refine needs visual features in common; uniform areas (water, dense forest, snow) and heavily changed landscapes may not have enough.</li>
+      <li>Drawn maps and plans are not matched automatically.</li>
+      <li>Tested on QGIS 3.34 (Linux) and 3.40 (Windows); macOS hasn't been tested.</li>
+    </ul>
+  </section>
+
+  <section id="glossary">
+    <h2>Glossary</h2>
+    <dl class="glossary">
+      <dt>Georeferencing</dt><dd>Giving an image map coordinates, so that it sits in its real place on the map.</dd>
+      <dt>Reference</dt><dd>The image with known coordinates the photo is matched against; here, the rendered QGIS map view.</dd>
+      <dt>CRS</dt><dd>Coordinate Reference System, for example WGS 84 (EPSG:4326) or Stereo 70 (EPSG:3844).</dd>
+      <dt>GeoTIFF</dt><dd>A TIFF image that also stores its coordinates and CRS.</dd>
+      <dt>Feature / keypoint</dt><dd>A small distinctive spot in an image (a corner, a blob) that can be recognised in another image.</dd>
+      <dt>SIFT, ORB</dt><dd>Two methods that find features and describe them so they can be paired between images.</dd>
+      <dt>CLAHE</dt><dd>Contrast Limited Adaptive Histogram Equalization: evens out contrast locally, which helps compare images taken in different conditions.</dd>
+      <dt>RANSAC</dt><dd>A method that finds the placement most matching pairs agree on, and ignores the pairs that disagree.</dd>
+      <dt>Similarity transformation</dt><dd>Move + rotate + uniform scale. Shapes keep their proportions.</dd>
+      <dt>Ground control point (GCP)</dt><dd>A point whose position is known both in the image and on the map.</dd>
+      <dt>North-up</dt><dd>An image whose rows run east–west and columns north–south, the form most GIS software expects.</dd>
+      <dt>Orthorectification</dt><dd>Correcting an image for camera perspective and terrain height; beyond the scope of this plugin.</dd>
+    </dl>
+  </section>
+
+  <section id="history">
+    <h2>Version history</h2>
+    <table>
+      <tr><th>Version</th><th>Changes</th></tr>
+      <tr><td>0.3.0</td><td>First public release. English documentation, installation guide and this help site. Dependency installer that repairs numpy only when needed.</td></tr>
+      <tr><td>0.2.1</td><td>Works even when numpy in the QGIS Python was replaced; clear message for missing libraries; Windows repair script.</td></tr>
+      <tr><td>0.2.0</td><td>Auto-refine starts from the manual alignment and is shown before saving; similarity model; safety checks; GDAL reading; sharper reference; free pan and zoom.</td></tr>
+      <tr><td>0.1.0</td><td>First version: comparison window and feature matching.</td></tr>
+    </table>
+    <p>The design decisions and lessons learned are described in <a href="https://github.com/raduandrei-source/qgis-auto-georeference/blob/main/qgis_auto_georeference/PHILOSOPHY_AND_DEVELOPMENT.md">PHILOSOPHY_AND_DEVELOPMENT.md</a>.</p>
+  </section>
+
+  <section id="credits">
+    <h2>Credits &amp; license</h2>
+    <p>Auto Georeference was written by <strong>Radu Andrei &amp; Claude</strong>. It is released under the MIT License.</p>
+    <p>It builds on QGIS, GDAL, OpenCV and numpy. Basemap imagery belongs to its providers and is subject to their terms.</p>
+    <p>Suggestions and bug reports are welcome on <a href="https://github.com/raduandrei-source/qgis-auto-georeference/issues">GitHub</a>.</p>
+  </section>
+
+  <footer>Auto Georeference · Radu Andrei &amp; Claude · MIT License</footer>
+</main>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('#toc a'));
+  var byId = {};
+  links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+  var sections = links.map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+                      .filter(Boolean);
+
+  function setActive(id) {
+    links.forEach(function (a) { a.classList.remove('active'); });
+    var a = byId[id];
+    if (!a) return;
+    a.classList.add('active');
+    var sb = document.getElementById('sidebar');
+    var r = a.getBoundingClientRect(), s = sb.getBoundingClientRect();
+    if (r.top < s.top + 60 || r.bottom > s.bottom - 20) {
+      sb.scrollTop += r.top - s.top - s.height / 3;
+    }
+  }
+
+  // scroll-spy: the active section is the last one whose top has passed 30% of the viewport
+  function onScroll() {
+    var line = window.innerHeight * 0.3, current = sections[0].id;
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i].getBoundingClientRect().top - line <= 0) current = sections[i].id;
+    }
+    if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 4) {
+      current = sections[sections.length - 1].id;
+    }
+    setActive(current);
+  }
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (!ticking) { requestAnimationFrame(function () { onScroll(); ticking = false; }); ticking = true; }
+  }, { passive: true });
+  window.addEventListener('resize', onScroll);
+  onScroll();
+
+  // mobile menu (opens below the top bar)
+  var sb = document.getElementById('sidebar'), btn = document.getElementById('menuBtn');
+  var bar = document.getElementById('topbar');
+  function fitBar() { document.documentElement.style.setProperty('--topbar-h', (bar.offsetHeight || 58) + 'px'); }
+  window.addEventListener('resize', fitBar); fitBar();
+  btn.addEventListener('click', function () {
+    var open = sb.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  links.forEach(function (a) {
+    a.addEventListener('click', function () { sb.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); });
+  });
+})();
+</script>
+</body>
+</html>

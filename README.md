@@ -1,0 +1,63 @@
+# Auto Georeference – QGIS plugin
+
+Georeference aerial photos in QGIS: line the photo up over the map by hand in a before/after window, then let
+feature matching (SIFT / ORB) snap it precisely into place. You see the result before it is saved.
+
+**Authors:** Radu Andrei & Claude · **License:** MIT · **QGIS:** 3.16+ (tested on 3.34 and 3.40)
+
+**[User guide (help site)](https://raduandrei-source.github.io/qgis-auto-georeference/)** ·
+**[Installation](qgis_auto_georeference/INSTALLATION.md)** ·
+**[Download](https://github.com/raduandrei-source/qgis-auto-georeference/releases)**
+
+---
+
+## How it works
+
+1. **Reference** – the current QGIS map view (satellite basemap, orthophoto, any layer) is rendered as a
+   georeferenced reference image, sharper than the screen.
+2. **Align by hand** – reference and photo sit on top of each other; a black masking line reveals one or the other.
+   Move, zoom and rotate the photo until it roughly matches.
+3. **Auto-refine** – starting from your alignment, feature matching finds hundreds of common points and moves the
+   photo to the exact position, in the same window. Unreliable results are refused and your alignment is kept.
+4. **Save** – a north-up GeoTIFF in the project CRS, placed by position, rotation and uniform scale, added to the map.
+
+## Install
+
+1. Download `qgis_auto_georeference.zip` from the
+   [Releases page](https://github.com/raduandrei-source/qgis-auto-georeference/releases) and install it in QGIS:
+   **Plugins → Manage and Install Plugins → Install from ZIP**.
+2. With QGIS closed, install OpenCV into the QGIS Python:
+   - **Windows:** double-click `repair_dependencies.bat` in the plugin folder, accept the administrator prompt.
+   - **Debian / Ubuntu:** `sudo apt install python3-opencv`
+   - **macOS / other:** run `install_dependencies.py` with the Python that QGIS uses.
+3. Start QGIS: **Raster → Auto Georeference → Auto Georeference Raster**.
+
+Everything else – requirements, every platform, the rules for the QGIS Python (never upgrade its numpy) and
+troubleshooting – is in **[INSTALLATION.md](qgis_auto_georeference/INSTALLATION.md)**.
+
+## Repository layout
+
+| Path | Content |
+|---|---|
+| `qgis_auto_georeference/` | The plugin (this folder is what goes into the QGIS plugins folder) |
+| `qgis_auto_georeference/INSTALLATION.md` | Installation, dependencies, troubleshooting |
+| `qgis_auto_georeference/PHILOSOPHY_AND_DEVELOPMENT.md` | Design decisions, development history, lessons learned |
+| `docs/` | The help site, published with GitHub Pages |
+| `tests/` | Automated tests that run in real QGIS (headless) |
+
+## Building the release zip
+
+```
+zip -r qgis_auto_georeference.zip qgis_auto_georeference -x "*/__pycache__/*"
+```
+
+The zip must contain the `qgis_auto_georeference` folder at its top level.
+
+## Contributing
+
+Bug reports and suggestions are welcome in [Issues](https://github.com/raduandrei-source/qgis-auto-georeference/issues).
+For errors, please include the text from **View → Panels → Log Messages → Auto Georeference**.
+
+## License
+
+MIT – see [LICENSE](LICENSE). © 2026 Radu Andrei & Claude.

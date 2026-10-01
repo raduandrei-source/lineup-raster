@@ -1,0 +1,2 @@
+# numpy: use the one that comes with QGIS - do NOT upgrade it (install_dependencies.py handles this)
+opencv-python-headless==4.10.0.84

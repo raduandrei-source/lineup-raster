@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+np2env/
+*.zip
+.DS_Store
+Thumbs.db
