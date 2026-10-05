@@ -7,7 +7,8 @@ feature matching (SIFT / ORB) snap it precisely into place. You see the result b
 
 **[User guide (help site)](https://raduandrei-source.github.io/lineup-raster/)** ·
 **[Installation](lineup_raster/INSTALLATION.md)** ·
-**[Download](https://github.com/raduandrei-source/lineup-raster/releases)**
+**[Download](https://github.com/raduandrei-source/lineup-raster/releases)** ·
+**[Roadmap](ROADMAP.md)**
 
 ---
 
@@ -42,6 +43,7 @@ troubleshooting – is in **[INSTALLATION.md](lineup_raster/INSTALLATION.md)**.
 | `lineup_raster/` | The plugin (this folder is what goes into the QGIS plugins folder) |
 | `lineup_raster/INSTALLATION.md` | Installation, dependencies, troubleshooting |
 | `lineup_raster/PHILOSOPHY_AND_DEVELOPMENT.md` | Design decisions, development history, lessons learned |
+| `ROADMAP.md` | Planned work: lens correction, visual comparison modes, perspective, any-camera profiles |
 | `docs/` | The help site, published with GitHub Pages |
 | `tests/` | Automated tests that run in real QGIS (headless) |
 
