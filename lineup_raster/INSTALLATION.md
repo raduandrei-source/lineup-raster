@@ -172,6 +172,10 @@ Two version numbers and no error means everything is in place.
    - **Shift** + drag / scroll moves or zooms both images together and keeps the alignment.
    - Rotate the photo with the slider (0.1° steps). **Fit view** brings everything back into the window and keeps the
      alignment; **Start over** resets both images to “match width”.
+   - **Compare** switches the view: *Red / cyan overlay* (grey where the images agree, coloured fringes where they
+     don't), *Edge tracing* (reference outlines in yellow over your photo) or *Blink* (the images alternate).
+     In these modes dragging moves the photo, Shift both images, Ctrl the reference.
+   - Hold **Space** to see the reference alone, in any mode.
 3. Line up the photo with the reference as well as you can.
 4. Choose the detector (SIFT: more precise, ~8 s; ORB: faster, ~3 s) and press **Auto-refine alignment**.
    The photo snaps into place in the window. The status line shows how many points were matched and how much the

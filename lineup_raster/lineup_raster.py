@@ -55,7 +55,7 @@ DEPENDENCY_HELP = (
     'folder and accept the administrator prompt. It restores the numpy that QGIS needs and '
     'installs a matching OpenCV. Then start QGIS again.')
 
-from qgis.PyQt.QtCore import Qt, QPoint, QRect, QSize, QUrl
+from qgis.PyQt.QtCore import Qt, QPoint, QRect, QSize, QUrl, QTimer, QEvent
 from qgis.PyQt.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QTransform, QDesktopServices
 from qgis.PyQt.QtWidgets import (QAction, QMessageBox, QFileDialog, QDialog,
                                  QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
@@ -357,6 +357,87 @@ def _event_pos(event):
     return event.pos()
 
 
+# ---------- helpers for the comparison modes (numpy only, no extra dependency) ----------
+
+COMPARE_MODES = [
+    ('slider', 'Slider (mask)'),
+    ('redcyan', 'Red / cyan overlay'),
+    ('edges', 'Edge tracing'),
+    ('blink', 'Blink'),
+]
+
+EDGE_COLOR = (255, 214, 0)        # reference outlines in edge tracing (RGB)
+BLINK_INTERVAL_MS = 350           # about 3 switches per second
+
+
+def _qimage_to_bgra(img):
+    """ARGB32 (premultiplied) QImage -> (h, w, 4) uint8 array in B, G, R, A order (copy)."""
+    img = img.convertToFormat(QImage.Format_ARGB32_Premultiplied)
+    h, w = img.height(), img.width()
+    ptr = img.constBits()
+    ptr.setsize(img.bytesPerLine() * h)
+    arr = np.frombuffer(ptr, np.uint8).reshape(h, img.bytesPerLine())[:, :w * 4]
+    return arr.reshape(h, w, 4).copy()
+
+
+def _rgb_to_qimage(rgb):
+    rgb = np.ascontiguousarray(rgb, dtype=np.uint8)
+    h, w, _ = rgb.shape
+    return QImage(rgb.data, w, h, 3 * w, QImage.Format_RGB888).copy()
+
+
+def _normalised_grey(bgra):
+    """Grey version of a layer image with its exposure normalised (mean 128, fixed contrast),
+    so a darker photo and a brighter map look alike where they show the same thing.
+    Returns (grey float32 0-255, alpha float32 0-1)."""
+    a = bgra[..., 3].astype(np.float32) / 255.0
+    g = (0.114 * bgra[..., 0] + 0.587 * bgra[..., 1] + 0.299 * bgra[..., 2]).astype(np.float32)
+    g = g / np.maximum(a, 1e-3)                       # undo premultiplication
+    valid = a > 0.5
+    if valid.sum() > 100:
+        m, s = float(g[valid].mean()), float(g[valid].std()) + 1e-3
+        g = np.clip((g - m) / s * 45.0 + 128.0, 0, 255)
+    return g * (a > 0), a
+
+
+def _red_cyan(ref_bgra, src_bgra):
+    """Reference in cyan, photo in red. Aligned details turn grey; offsets show as
+    red / cyan fringes. Outside the photo the reference is shown in plain grey."""
+    gr, ar = _normalised_grey(ref_bgra)
+    gs, as_ = _normalised_grey(src_bgra)
+    red = gs * as_ + gr * ar * (1.0 - as_)
+    cyan = gr * ar
+    return np.dstack([red, cyan, cyan]).clip(0, 255).astype(np.uint8)
+
+
+def _edge_mask(bgra, min_length=25):
+    """Structural outlines (roads, buildings) of an image: Canny on a smoothed, normalised
+    grey image, short fragments (tree texture, noise) removed."""
+    g, a = _normalised_grey(bgra)
+    g = cv2.GaussianBlur(g.astype(np.uint8), (0, 0), 1.4)
+    valid = cv2.erode((a > 0.5).astype(np.uint8), np.ones((7, 7), np.uint8)) > 0
+    if valid.sum() < 100:
+        return np.zeros(g.shape, bool)
+    med = float(np.median(g[valid]))
+    edges = cv2.Canny(g, max(10.0, 0.66 * med), min(255.0, 1.33 * med)) > 0
+    edges &= valid
+    n, labels, stats, _ = cv2.connectedComponentsWithStats(edges.astype(np.uint8), connectivity=8)
+    keep = np.zeros(n, bool)
+    keep[1:] = stats[1:, cv2.CC_STAT_AREA] >= min_length
+    return keep[labels]
+
+
+def _edge_tracing(ref_bgra, src_bgra, ref_edges):
+    """The photo, with the outlines of the reference drawn on top of it in yellow.
+    Outside the photo, the reference is shown dimmed for context."""
+    as_ = src_bgra[..., 3:4].astype(np.float32) / 255.0
+    src_rgb = src_bgra[..., 2::-1].astype(np.float32)          # premultiplied = over black
+    ref_rgb = ref_bgra[..., 2::-1].astype(np.float32) * 0.45
+    out = src_rgb + ref_rgb * (1.0 - as_)
+    out[ref_edges] = EDGE_COLOR
+    return out.clip(0, 255).astype(np.uint8)
+
+
 class _ImageLayer:
     """One image in the comparison view and where it sits on screen."""
 
@@ -400,6 +481,14 @@ class ComparisonView(QWidget):
     - Scroll: zooms the image under the cursor, around the cursor.
     - Shift + drag / scroll: moves / zooms both together (alignment unchanged).
     - Pan and zoom are free at any zoom level; black shows where an image ends.
+
+    Comparison modes (compare_mode):
+    - 'slider'  : the masking line described above.
+    - 'redcyan' : reference in cyan, photo in red, on top of each other.
+    - 'edges'   : the photo with the reference outlines drawn over it.
+    - 'blink'   : reference and photo alternate about three times per second.
+    In the overlay modes there is no line: drag / scroll moves the photo, Shift both,
+    Ctrl the reference. In every mode, holding Space shows the reference alone.
     """
 
     SLIDER_GRAB = 15    # px from the line: drag the line
@@ -418,7 +507,16 @@ class ComparisonView(QWidget):
         self._mode = None              # 'slider' or 'pan'
         self._targets = []
         self._last_pos = QPoint()
+        self.compare_mode = 'slider'
+        self.peek = False              # Space held: show the reference alone
+        self._blink_ref = False        # blink mode: currently showing the reference
+        self._blink_timer = QTimer(self)
+        self._blink_timer.setInterval(BLINK_INTERVAL_MS)
+        self._blink_timer.timeout.connect(self._blink_step)
+        self._composite_cache = None
+        self._edge_cache = None
         self.setMouseTracking(True)
+        self.setFocusPolicy(Qt.StrongFocus)
         self.setMinimumSize(400, 300)
         self.setCursor(Qt.OpenHandCursor)
 
@@ -521,9 +619,33 @@ class ComparisonView(QWidget):
             l.cx += dx
             l.cy += dy
 
+    def set_compare_mode(self, mode):
+        self.compare_mode = mode
+        self._blink_ref = False
+        if mode == 'blink':
+            self._blink_timer.start()
+        else:
+            self._blink_timer.stop()
+        self.setCursor(Qt.OpenHandCursor)
+        self.update()
+
+    def set_peek(self, on):
+        """Space held: show the reference alone (any mode)."""
+        if self.peek != bool(on):
+            self.peek = bool(on)
+            self.update()
+
+    def _blink_step(self):
+        self._blink_ref = not self._blink_ref
+        self.update()
+
     def _layers_at(self, x, modifiers):
         if modifiers & Qt.ShiftModifier:
             layers = [self.ref, self.src]
+        elif self.compare_mode != 'slider':
+            # overlay modes have no line: the photo is the image you align;
+            # Ctrl moves the reference
+            layers = [self.ref] if modifiers & Qt.ControlModifier else [self.src]
         elif x < self.slider_x():
             layers = [self.ref]
         else:
@@ -531,6 +653,9 @@ class ComparisonView(QWidget):
         return [layer for layer in layers if layer.pixmap is not None]
 
     def _update_cursor(self, x):
+        if self.compare_mode != 'slider':
+            self.setCursor(Qt.OpenHandCursor)
+            return
         d = abs(x - self.slider_x())
         if d <= self.SLIDER_GRAB:
             self.setCursor(Qt.SizeHorCursor)
@@ -547,10 +672,13 @@ class ComparisonView(QWidget):
             self.fit()
 
     def mousePressEvent(self, event):
+        self.setFocus()                        # so Space reaches the view
         if event.button() != Qt.LeftButton:
             return
         pos = _event_pos(event)
         d = abs(pos.x() - self.slider_x())
+        if self.compare_mode != 'slider':
+            d = self.DEAD_ZONE                 # no line to grab in the overlay modes
         if d <= self.SLIDER_GRAB:
             self._mode = 'slider'
             self.setCursor(Qt.SizeHorCursor)
@@ -622,14 +750,76 @@ class ComparisonView(QWidget):
         layer._cache = (key, img)
         return img
 
+    # ---------- keyboard: hold Space to see the reference alone ----------
+
+    def enterEvent(self, event):
+        self.setFocus()
+        super().enterEvent(event)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Space:
+            if not event.isAutoRepeat():
+                self.set_peek(True)
+            event.accept()
+            return
+        super().keyPressEvent(event)
+
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_Space:
+            if not event.isAutoRepeat():
+                self.set_peek(False)
+            event.accept()
+            return
+        super().keyReleaseEvent(event)
+
+    # ---------- drawing ----------
+
+    def _composite(self):
+        """Red / cyan or edge tracing image of the whole view, cached until an image moves."""
+        if self.ref.pixmap is None or self.src.pixmap is None:
+            return None
+        ref_img, src_img = self._layer_image(self.ref), self._layer_image(self.src)
+        key = (self.compare_mode, self.ref._cache[0], self.src._cache[0])
+        if self._composite_cache is not None and self._composite_cache[0] == key:
+            return self._composite_cache[1]
+        ref_bgra, src_bgra = _qimage_to_bgra(ref_img), _qimage_to_bgra(src_img)
+        if self.compare_mode == 'redcyan':
+            rgb = _red_cyan(ref_bgra, src_bgra)
+        else:
+            # the reference outlines only change when the reference moves
+            if self._edge_cache is None or self._edge_cache[0] != self.ref._cache[0]:
+                self._edge_cache = (self.ref._cache[0], _edge_mask(ref_bgra))
+            rgb = _edge_tracing(ref_bgra, src_bgra, self._edge_cache[1])
+        img = _rgb_to_qimage(rgb)
+        self._composite_cache = (key, img)
+        return img
+
+    HINTS = {
+        'slider': 'Left of the line: reference · right: photo · hold Space: reference only',
+        'redcyan': 'Grey = aligned · red / cyan fringes = offset (red: photo, cyan: reference) · '
+                   'drag: photo · Shift: both · Ctrl: reference · Space: reference only',
+        'edges': 'Yellow lines: reference outlines over your photo · they should sit on the same edges · '
+                 'drag: photo · Shift: both · Ctrl: reference',
+        'blink': 'Switching between reference and photo · anything that jumps is out of place · '
+                 'drag: photo · Shift: both · Ctrl: reference',
+    }
+
+    def _draw_hint(self, painter, text):
+        fm = painter.fontMetrics()
+        w = min(self.width() - 16, fm.horizontalAdvance(text) + 16) if hasattr(fm, 'horizontalAdvance') \
+            else min(self.width() - 16, fm.width(text) + 16)
+        rect = QRect(8, self.height() - fm.height() - 16, w, fm.height() + 8)
+        painter.setOpacity(1.0)
+        painter.fillRect(rect, QColor(0, 0, 0, 160))
+        painter.setPen(QColor(235, 235, 235))
+        painter.drawText(rect.adjusted(8, 0, -8, 0), Qt.AlignVCenter | Qt.AlignLeft, text)
+
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.fillRect(self.rect(), QColor(0, 0, 0))
 
         w, h = self.width(), self.height()
-        sx = self.slider_x()
-        left = QRect(0, 0, sx, h)
-        right = QRect(sx, 0, w - sx, h)
+        full = QRect(0, 0, w, h)
 
         def draw(layer, part, opacity=1.0):
             if layer.pixmap is None or part.width() <= 0:
@@ -637,14 +827,32 @@ class ComparisonView(QWidget):
             painter.setOpacity(opacity)
             painter.drawImage(part, self._layer_image(layer), part)   # plain copy, no scaling
 
-        draw(self.ref, left)
-        draw(self.src, right)
-        if self.transparency > 0:
-            draw(self.src, left, self.transparency / 100.0)
-        painter.setOpacity(1.0)
+        mode = self.compare_mode
+        if self.peek:
+            draw(self.ref, full)
+            hint = 'Reference (release Space to return)'
+        elif mode == 'slider':
+            sx = self.slider_x()
+            left = QRect(0, 0, sx, h)
+            right = QRect(sx, 0, w - sx, h)
+            draw(self.ref, left)
+            draw(self.src, right)
+            if self.transparency > 0:
+                draw(self.src, left, self.transparency / 100.0)
+            painter.setOpacity(1.0)
+            painter.setPen(QPen(QColor(0, 0, 0), 1))
+            painter.drawLine(sx, 0, sx, h)
+            hint = self.HINTS['slider']
+        elif mode == 'blink':
+            draw(self.ref if self._blink_ref else self.src, full)
+            hint = ('Reference' if self._blink_ref else 'Photo') + '  ·  ' + self.HINTS['blink']
+        else:
+            img = self._composite()
+            if img is not None:
+                painter.drawImage(0, 0, img)
+            hint = self.HINTS[mode]
 
-        painter.setPen(QPen(QColor(0, 0, 0), 1))
-        painter.drawLine(sx, 0, sx, h)
+        self._draw_hint(painter, hint)
         painter.end()
 
 
@@ -676,16 +884,60 @@ class AlignmentDialog(QDialog):
         self.update_ref_image()
         self.update_src_image()
 
+        # Space (hold = reference alone) must reach the view even when a button has
+        # keyboard focus - otherwise Space would press that button.
+        QApplication.instance().installEventFilter(self)
+
+    def eventFilter(self, obj, event):
+        if (event.type() in (QEvent.KeyPress, QEvent.KeyRelease, QEvent.ShortcutOverride)
+                and event.key() == Qt.Key_Space and self.isVisible()
+                and isinstance(obj, QWidget) and (obj is self or self.isAncestorOf(obj))):
+            if event.type() != QEvent.ShortcutOverride and not event.isAutoRepeat():
+                self.comp_view.set_peek(event.type() == QEvent.KeyPress)
+            event.accept()
+            return True
+        return super().eventFilter(obj, event)
+
+    def done(self, result):
+        QApplication.instance().removeEventFilter(self)
+        self.comp_view.set_compare_mode('slider')       # stops the blink timer
+        super().done(result)
+
+    COMPARE_HELP = {
+        'slider': '',
+        'redcyan': 'Grey where the images agree; red / cyan fringes show an offset.',
+        'edges': 'Yellow: outlines of the reference drawn over your photo.',
+        'blink': 'The two images alternate; anything that jumps is out of place.',
+    }
+
+    def on_compare_changed(self, index):
+        mode = self.compare_combo.itemData(index)
+        self.comp_view.set_compare_mode(mode)
+        self.compare_help.setText(self.COMPARE_HELP.get(mode, ''))
+        self.transparency_slider.setEnabled(mode == 'slider')
+        self.comp_view.setFocus()
+
     def init_ui(self):
         main_layout = QVBoxLayout()
 
         main_layout.addWidget(QLabel(
-            'Left of the black line: reference (QGIS view).  Right: your photo.  '
-            'Drag the black line to compare - the images never move with it.\n'
-            'Drag on an image to move it, scroll to zoom it.  '
-            'Shift + drag / scroll = move / zoom both together (keeps the alignment).\n'
+            'Slider mode - left of the black line: reference (QGIS view), right: your photo. '
+            'Drag the line to compare; the images never move with it.\n'
+            'Drag an image to move it, scroll to zoom it; Shift = both together (keeps the alignment). '
+            'Hold Space to see the reference alone. Other Compare modes help spot small offsets.\n'
             'Line up the photo with the reference, press "Auto-refine" and check the result, '
             'then "Save". What you see is what gets saved.'))
+
+        compare_layout = QHBoxLayout()
+        compare_layout.addWidget(QLabel('Compare:'))
+        self.compare_combo = QComboBox()
+        for key, label in COMPARE_MODES:
+            self.compare_combo.addItem(label, key)
+        self.compare_combo.currentIndexChanged.connect(self.on_compare_changed)
+        compare_layout.addWidget(self.compare_combo)
+        self.compare_help = QLabel('')
+        compare_layout.addWidget(self.compare_help, 1)
+        main_layout.addLayout(compare_layout)
 
         rot_layout = QHBoxLayout()
         rot_layout.addWidget(QLabel('Rotate photo:'))

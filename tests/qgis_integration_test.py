@@ -226,6 +226,73 @@ check('rotated photo: pixels identical wherever the slider is',
       all(ia.pixel(x, y) == ib.pixel(x, y) for x in range(int(W * 0.85), W, 3) for y in range(0, H, 5)) and
       all(ia.pixel(x, y) == ib.pixel(x, y) for x in range(0, int(W * 0.25), 3) for y in range(0, H, 5)))
 
+# ---------------- comparison modes: red/cyan, edge tracing, blink, Space ----------------
+import time
+from qgis.PyQt.QtTest import QTest
+from qgis.PyQt.QtGui import QKeyEvent
+from qgis.PyQt.QtWidgets import QApplication, QPushButton
+def view_rgb(v):
+    a = ag._qimage_to_bgra(v.grab().toImage())
+    return a[..., 2::-1].astype(int)
+dlg.on_reset_view(); dlg.set_transformation(A_true[:2]); qgs.processEvents()
+view = dlg.comp_view; W, H = view.width(), view.height()
+both = (ag._qimage_to_bgra(view._layer_image(view.src))[..., 3] > 250) & \
+       (ag._qimage_to_bgra(view._layer_image(view.ref))[..., 3] > 250)
+both[H - 60:] = False                                   # leave out the hint box
+def fringe(v):
+    rgb = view_rgb(v); return float(np.abs(rgb[..., 0] - rgb[..., 1])[both].mean())
+idx = [k for k, _ in ag.COMPARE_MODES].index('redcyan'); dlg.compare_combo.setCurrentIndex(idx); qgs.processEvents()
+t0 = time.time(); view._composite_cache = None; view.grab(); t_comp = time.time() - t0
+f_ok = fringe(view)
+view.src.cx += 6; view.update(); qgs.processEvents(); f_off = fringe(view); view.src.cx -= 6
+check('red/cyan: a 6 px offset produces clearly more colour fringe than the true alignment',
+      f_off > 1.25 * f_ok, f'mean |R-G| aligned {f_ok:.1f} vs offset {f_off:.1f}')
+rgb = view_rgb(view); outside = (ag._qimage_to_bgra(view._layer_image(view.src))[..., 3] == 0) & \
+      (ag._qimage_to_bgra(view._layer_image(view.ref))[..., 3] > 250); outside[H - 60:] = False
+check('red/cyan: outside the photo the reference is plain grey',
+      outside.sum() == 0 or float(np.abs(rgb[..., 0] - rgb[..., 1])[outside].mean()) < 1.0)
+check('red/cyan: composite is fast enough for live dragging', t_comp < 0.5, f'{t_comp*1000:.0f} ms')
+
+idx = [k for k, _ in ag.COMPARE_MODES].index('edges'); dlg.compare_combo.setCurrentIndex(idx); qgs.processEvents()
+rgb = view_rgb(view); yellow = np.all(rgb == np.array(ag.EDGE_COLOR), axis=-1)
+check('edge tracing: reference outlines are drawn', yellow.mean() > 0.005, f'{yellow.mean()*100:.1f}% of the view')
+def edge_agreement():
+    ref_e = view._edge_cache[1]
+    src_e = ag._edge_mask(ag._qimage_to_bgra(view._layer_image(view.src)))
+    src_e = cv2.dilate(src_e.astype(np.uint8), np.ones((3, 3), np.uint8)) > 0
+    m = ref_e & both
+    return float((m & src_e).sum()) / max(1, m.sum())
+view.update(); qgs.processEvents(); view.grab(); e_ok = edge_agreement()
+view.src.cx += 6; view.update(); qgs.processEvents(); view.grab(); e_off = edge_agreement(); view.src.cx -= 6
+check('edge tracing: outlines sit on the photo edges when aligned, much less when offset',
+      e_ok > 1.3 * e_off, f'agreement aligned {e_ok:.2f} vs offset {e_off:.2f}')
+r0 = view.ref.state(); s0 = view.src.state()
+mouse(view, 'press', view.slider_x(), 300); mouse(view, 'move', view.slider_x() + 40, 330); mouse(view, 'release', 0, 0)
+check('overlay modes: no line to grab, dragging anywhere moves the photo', view.src.state() != s0 and view.ref.state() == r0)
+s1 = view.src.state()
+mouse(view, 'press', 500, 300, Qt.ControlModifier); mouse(view, 'move', 520, 300, Qt.ControlModifier); mouse(view, 'release', 0, 0)
+check('overlay modes: Ctrl + drag moves the reference only', view.ref.state() != r0 and view.src.state() == s1)
+dlg.set_transformation(A_true[:2])
+
+idx = [k for k, _ in ag.COMPARE_MODES].index('blink'); dlg.compare_combo.setCurrentIndex(idx); qgs.processEvents()
+seen = set()
+for _ in range(12):
+    QTest.qWait(100); seen.add(view._blink_ref)
+check('blink: alternates between photo and reference by itself', seen == {True, False})
+dlg.compare_combo.setCurrentIndex(0); qgs.processEvents()
+check('back to slider mode stops blinking', not view._blink_timer.isActive())
+
+save_btn = [b for b in dlg.findChildren(QPushButton) if b.text().startswith('Save')][0]
+save_btn.setFocus(); clicked = []
+save_btn.clicked.connect(lambda: clicked.append(1))
+QApplication.sendEvent(save_btn, QKeyEvent(QEvent.KeyPress, Qt.Key_Space, Qt.NoModifier, ' '))
+peek_on = view.peek; peek_img = view_rgb(view)
+QApplication.sendEvent(save_btn, QKeyEvent(QEvent.KeyRelease, Qt.Key_Space, Qt.NoModifier, ' '))
+check('Space (even with a button focused) shows the reference and presses no button',
+      peek_on and not view.peek and not clicked and dlg.isVisible())
+view.slider_frac = 1.0; ref_only = view_rgb(view); view.slider_frac = 0.5
+check('Space view = reference alone', np.array_equal(peek_img[:H - 60], ref_only[:H - 60]))
+
 # ---------------- menu: run entry + online help entry ----------------
 from qgis.PyQt.QtGui import QDesktopServices
 class MenuIface:

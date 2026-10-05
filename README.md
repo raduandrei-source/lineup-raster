@@ -17,7 +17,8 @@ feature matching (SIFT / ORB) snap it precisely into place. You see the result b
 1. **Reference** – the current QGIS map view (satellite basemap, orthophoto, any layer) is rendered as a
    georeferenced reference image, sharper than the screen.
 2. **Align by hand** – reference and photo sit on top of each other; a black masking line reveals one or the other.
-   Move, zoom and rotate the photo until it roughly matches.
+   Move, zoom and rotate the photo until it roughly matches. **Compare** modes (red / cyan overlay, edge tracing,
+   blink) make small offsets easy to see.
 3. **Auto-refine** – starting from your alignment, feature matching finds hundreds of common points and moves the
    photo to the exact position, in the same window. Unreliable results are refused and your alignment is kept.
 4. **Save** – a north-up GeoTIFF in the project CRS, placed by position, rotation and uniform scale, added to the map.
@@ -43,7 +44,7 @@ troubleshooting – is in **[INSTALLATION.md](lineup_raster/INSTALLATION.md)**.
 | `lineup_raster/` | The plugin (this folder is what goes into the QGIS plugins folder) |
 | `lineup_raster/INSTALLATION.md` | Installation, dependencies, troubleshooting |
 | `lineup_raster/PHILOSOPHY_AND_DEVELOPMENT.md` | Design decisions, development history, lessons learned |
-| `ROADMAP.md` | Planned work: lens correction, visual comparison modes, perspective, any-camera profiles |
+| `ROADMAP.md` | Planned work: lens correction, more comparison modes and an error map, perspective, any-camera profiles |
 | `docs/` | The help site, published with GitHub Pages |
 | `tests/` | Automated tests that run in real QGIS (headless) |
 

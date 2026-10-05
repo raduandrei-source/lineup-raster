@@ -65,6 +65,27 @@ Saving without auto-refine is possible; the georeference is then exactly the man
   alignment); **Start over** (match width, alignment reset); photo opacity over the reference; colour sliders for
   each image (visual only).
 
+**Compare modes (0.4.0).** The slider shows one image or the other, so an offset of a pixel or two is easy to miss.
+Three more ways to look at the same alignment:
+
+- **Red / cyan overlay:** reference in the cyan channels, photo in the red channel, both in grey tones with their
+  exposure evened out (mean and contrast normalised). Where the images agree the result is grey; an offset leaves red
+  and cyan fringes along every edge. Areas that exist in only one image (a new building) show as solid red or cyan.
+- **Edge tracing:** the outlines of the reference are drawn in yellow over the photo, like tracing paper or a CAD
+  overlay. Outlines come from Canny edges on a smoothed, normalised grey image; fragments shorter than 25 px (tree
+  texture, noise) are dropped, so mostly roads and building edges remain.
+- **Blink:** reference and photo alternate about three times per second; the eye picks up anything that jumps.
+- **Space** held shows the reference alone in every mode, a quick manual blink.
+
+Design decisions:
+
+- In the overlay modes there is no line, so “left side / right side” no longer says which image you move. The photo
+  is the image being aligned, so drag and scroll move the photo; Shift moves both (the alignment stays); Ctrl moves
+  the reference.
+- Space is caught by the dialog for all its children. Otherwise, with a button focused, Space would press the button
+  (for example *Save*).
+- The modes only change the display. Matching and saving use the same alignment whatever the mode.
+
 ---
 
 ## 4. How the code is organised
@@ -82,7 +103,9 @@ Everything is in `lineup_raster.py`:
 
 **The view:** each image is drawn once over the whole window; the line only copies pieces of the two drawings.
 Because of that, what is shown on each side is identical to the pixel wherever the line is, and dragging the line
-is fast.
+is fast. The red / cyan and edge tracing images are built from the same two drawings with numpy and OpenCV (no new
+dependency) and cached; the reference outlines are recomputed only when the reference moves. Building a composite
+takes about 70 ms for a 1600×900 view, fast enough while dragging.
 
 **Automatic matching (`refine_alignment`):**
 
@@ -199,6 +222,10 @@ Results (29 checks, all passing):
 - Window: the line moves no image (pixel-identical, rotated photo included), free pan and zoom with black margins,
   Shift keeps the alignment, Fit view keeps the alignment.
 - Auto-refine time (4000×3000 photo): ORB ~3 s, SIFT ~8 s.
+- Compare modes (0.4.0): moving the photo 6 px off the true alignment raises the red / cyan fringe from 25 to 43
+  (mean |R−G|) and drops the share of reference outlines lying on photo edges from 0.61 to 0.39. Blink alternates
+  by itself; Space shows the reference alone even with a button focused, without pressing it; overlay-mode mouse
+  rules (photo / Shift / Ctrl) behave as designed.
 
 **Not tested yet:** live Google Satellite (no internet in the test environment), real historical aerial photos,
 `repair_dependencies.bat` on Windows.
@@ -216,7 +243,8 @@ The tests are in `tests/` in the repository.
 - **Map rotation** in QGIS must be 0°.
 - Very old photos compared with current satellite imagery: when a lot has changed, auto-refine may refuse. The
   manual alignment can still be saved.
-- Idea: show the matched points over the image for visual confidence.
+- Planned work (lens correction, more comparison modes and an error map, perspective, any-camera profiles) is in
+  `ROADMAP.md` at the root of the repository.
 - **Old maps and plans:** the manual part already works. For automatic matching, a drawn reference
   (OpenStreetMap, cadastre) and structure-based matching (street network, intersections) would be needed, plus an
   elastic transformation (thin plate spline) for paper shrinkage and drafting errors. A promising direction is an
@@ -255,6 +283,14 @@ The tests are in `tests/` in the repository.
 16. **A name that doesn't repeat existing plugins.** The QGIS plugin repository already has “Auto Georeference
     Raster”, “Magic Georeferencer”, “Smart Georeferencer”, “Freehand Georeferencer” and swipe tools. Chosen name:
     **LineUp Raster** (before 0.3.0 the plugin was called “Auto Georeference”).
+17. **Help entry in the QGIS menu** that opens the online guide.
+18. **Lens distortion of wide-angle photos, and buildings leaning in perspective toward the edges: can the plugin
+    follow the streets?** Discussed and put on the roadmap: DJI lens correction first (calibration stored in the
+    photo), then any camera (Lensfun profiles, saved profiles, estimate from the map); a perspective model and a
+    “ground only” option that matches only along the streets; the lean of buildings can't be removed from a single
+    photo.
+19. **A more visual way to spot errors.** Proposed modes: red / cyan, edge tracing, blink, checkerboard, loupe,
+    error map. The first three were built in 0.4.0.
 
 **In short:** line up the photo by hand in a before/after window where the images stay put. The computer must use
 exactly that overlay to find the precise position. The result must be credible (correct scale, no deformation) and

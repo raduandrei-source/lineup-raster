@@ -3,8 +3,8 @@ name=LineUp Raster
 qgisMinimumVersion=3.16
 qgisMaximumVersion=3.99
 description=Georeference aerial photos by lining them up over the map by hand, then let feature matching (SIFT/ORB) snap them into place.
-about=Line up an aerial photo over the current QGIS map view in a before/after comparison window (masking slider, independent pan/zoom/rotate). Auto-refine starts from your alignment and snaps the photo precisely using SIFT or ORB feature matching, shows the result before saving, and refuses unreliable results. The photo is saved as a north-up GeoTIFF placed by position, rotation and uniform scale only (no deformation). Needs OpenCV (opencv-python-headless) in the QGIS Python - see INSTALLATION.md.
-version=0.3.0
+about=Line up an aerial photo over the current QGIS map view in a before/after comparison window (masking slider, independent pan/zoom/rotate). Red / cyan, edge tracing and blink modes make small offsets easy to see. Auto-refine starts from your alignment and snaps the photo precisely using SIFT or ORB feature matching, shows the result before saving, and refuses unreliable results. The photo is saved as a north-up GeoTIFF placed by position, rotation and uniform scale only (no deformation). Needs OpenCV (opencv-python-headless) in the QGIS Python - see INSTALLATION.md.
+version=0.4.0
 author=Radu Andrei & Claude
 email=
 homepage=https://raduandrei-source.github.io/lineup-raster/
@@ -14,6 +14,9 @@ category=Raster
 tags=georeferencing, georeference, aerial photo, raster, alignment, feature matching, SIFT, ORB
 experimental=False
 changelog=
+    0.4.0 - Compare modes for spotting alignment errors: red / cyan overlay, edge tracing, blink
+    - Hold Space to see the reference alone, in any mode
+    - In the overlay modes: drag moves the photo, Shift both images, Ctrl the reference
     0.3.0 - First public release, renamed from "Auto Georeference" to LineUp Raster
     - English documentation, installation guide and help site
     - Raster > LineUp Raster > Help (online user guide) opens the help site

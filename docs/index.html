@@ -174,7 +174,7 @@
 <aside id="sidebar">
   <div class="brand">
     <div class="name">LineUp Raster</div>
-    <div class="tag">QGIS plugin · User guide · v0.3.0</div>
+    <div class="tag">QGIS plugin · User guide · v0.4.0</div>
     <div class="links">
       <a href="https://github.com/raduandrei-source/lineup-raster">GitHub</a>
       <a href="https://github.com/raduandrei-source/lineup-raster/releases">Download</a>
@@ -199,6 +199,7 @@
 
     <div class="group-label">Concepts</div>
     <a href="#masking">The masking line</a>
+    <a href="#compare">Compare modes</a>
     <a href="#navigation">Navigation &amp; match width</a>
     <a href="#detectors">SIFT and ORB</a>
     <a href="#model">Placement model</a>
@@ -369,6 +370,8 @@ Esri World Imagery  https://server.arcgisonline.com/ArcGIS/rest/services/World_I
       <tr><td>Fit view</td><td>Brings everything back into the window and keeps the alignment.</td></tr>
       <tr><td>Start over</td><td>Both images back to “match width”, rotation 0, alignment reset.</td></tr>
       <tr><td>Photo over reference</td><td>Draws the photo semi-transparent over the reference side as well.</td></tr>
+      <tr><td>Compare</td><td>Switches between Slider, Red / cyan overlay, Edge tracing and Blink (see <a href="#compare">Compare modes</a>).</td></tr>
+      <tr><td>Hold <kbd>Space</kbd></td><td>Shows the reference alone, in any mode.</td></tr>
       <tr><td>Sat / Bright</td><td>Colour adjustments for each image, for your eyes only.</td></tr>
     </table>
     <h3>How to align quickly</h3>
@@ -391,7 +394,7 @@ Esri World Imagery  https://server.arcgisonline.com/ArcGIS/rest/services/World_I
       <li>keeps the pairs that agree on one common placement (RANSAC);</li>
       <li>runs the <a href="#safety">safety checks</a>, then moves the photo in the window.</li>
     </ol>
-    <p>The status line reports the number of matching points, the estimated error in reference pixels, and how much the photo was moved, scaled and rotated compared with your alignment. Sweep the line across the image to check edges, roads and buildings. <strong>Undo auto-refine</strong> returns to your alignment; you can adjust and refine again.</p>
+    <p>The status line reports the number of matching points, the estimated error in reference pixels, and how much the photo was moved, scaled and rotated compared with your alignment. Sweep the line across the image to check edges, roads and buildings, or switch <strong>Compare</strong> to <em>Red / cyan</em> or <em>Edge tracing</em> to see the whole image at once. <strong>Undo auto-refine</strong> returns to your alignment; you can adjust and refine again.</p>
     <div class="ok"><strong>Good sign</strong><br>Hundreds of points, an error around one pixel or less, and a small correction (a few metres, a fraction of a degree).</div>
   </section>
 
@@ -412,6 +415,35 @@ Esri World Imagery  https://server.arcgisonline.com/ArcGIS/rest/services/World_I
     <h2>The masking line</h2>
     <p>Each image has its own position on screen: a centre, a zoom and (for the photo) a rotation. The black line is only a mask that decides which image is visible on each side. That is why dragging the line never moves anything, and why what you see on each side stays identical to the pixel wherever the line is.</p>
     <p>Near the line there is a small dead zone so you don't move an image by accident: within 15 px you grab the line, between 15 and 20 px nothing happens, beyond 20 px you move the image on that side.</p>
+  </section>
+
+  <section id="compare">
+    <h2>Compare modes</h2>
+    <p>The masking line shows one image or the other, so an offset of a pixel or two can slip by. The <strong>Compare</strong> selector at the top of the window shows the same alignment in other ways. The modes only change what you see; matching and saving are the same in every mode.</p>
+    <table>
+      <tr><th>Mode</th><th>What you see</th><th>How to read it</th></tr>
+      <tr><td>Slider</td><td>Reference left of the black line, photo right of it</td><td>Roads and edges should continue across the line without a jump.</td></tr>
+      <tr><td>Red / cyan overlay</td><td>Reference in cyan, photo in red, both in grey tones with their exposure evened out</td><td><strong>Grey</strong>: the images agree. <strong>Red / cyan fringes</strong> along edges: an offset; the side the fringe is on shows the direction. <strong>Solid red or cyan areas</strong>: something present in only one image (a new building, a changed field).</td></tr>
+      <tr><td>Edge tracing</td><td>Your photo, with the outlines of the reference drawn on it in yellow</td><td>The yellow lines should sit on the edges of roads and buildings. A line running beside its edge shows the offset.</td></tr>
+      <tr><td>Blink</td><td>Reference and photo alternate about three times per second</td><td>Anything that jumps is out of place; the eye notices even very small shifts.</td></tr>
+    </table>
+    <div class="figure">
+      <img src="img/compare_redcyan.jpg" alt="Red / cyan overlay, aligned on the left and 8 pixels off on the right" style="width:100%;height:auto;border-radius:8px;display:block">
+      <div class="cap">Red / cyan overlay on test imagery: aligned (left) and 8 px off (right). The solid red and cyan squares are areas changed on purpose in the test photo.</div>
+    </div>
+    <div class="figure">
+      <img src="img/compare_edges.jpg" alt="Edge tracing, aligned on the left and 8 pixels off on the right" style="width:100%;height:auto;border-radius:8px;display:block">
+      <div class="cap">Edge tracing on the same imagery: the yellow outlines sit on the roads when aligned (left) and run beside them when off (right).</div>
+    </div>
+    <h3>Mouse and keyboard in the overlay modes</h3>
+    <p>Red / cyan, edge tracing and blink have no black line, so the side of the window no longer decides which image moves:</p>
+    <ul>
+      <li>drag or scroll moves / zooms <strong>the photo</strong>;</li>
+      <li><kbd>Shift</kbd> + drag / scroll moves / zooms <strong>both</strong> images, keeping the alignment;</li>
+      <li><kbd>Ctrl</kbd> + drag / scroll moves / zooms <strong>the reference</strong>;</li>
+      <li>holding <kbd>Space</kbd> shows the reference alone (this works in every mode, including the slider).</li>
+    </ul>
+    <p>A short hint at the bottom left of the view repeats these rules for the current mode.</p>
   </section>
 
   <section id="navigation">
@@ -462,6 +494,8 @@ Esri World Imagery  https://server.arcgisonline.com/ArcGIS/rest/services/World_I
       <li>Crop scanner borders, frames and film edges from archive photos before using them.</li>
       <li>Align on features that are unlikely to have changed: road junctions, old buildings, rivers, railways.</li>
       <li>After auto-refine, sweep the line slowly across roads and building edges; a correct result makes them continue seamlessly.</li>
+      <li>For a final check, use <em>Red / cyan</em>: zoom in with <kbd>Shift</kbd> + wheel and look for coloured fringes along roads. Fringes on rooftops only are normal for tall buildings away from the photo centre.</li>
+      <li>In <em>Edge tracing</em> or <em>Red / cyan</em>, small nudges of the photo with the mouse show the effect immediately; it is often the quickest way to fine-tune by hand.</li>
       <li>If auto-refine refuses, improve the manual alignment a little and try again, or switch detector.</li>
       <li>For a batch of photos from the same flight, keep the QGIS project open and move the map between photos.</li>
     </ul>
@@ -521,7 +555,7 @@ Esri World Imagery  https://server.arcgisonline.com/ArcGIS/rest/services/World_I
       <li>Drawn maps and plans are not matched automatically.</li>
       <li>Tested on QGIS 3.34 (Linux) and 3.40 (Windows); macOS hasn't been tested.</li>
     </ul>
-    <p>Lens correction for wide-angle and drone cameras, more visual comparison modes, a perspective model and a “ground only” option that follows the streets are planned; see the <a href="https://github.com/raduandrei-source/lineup-raster/blob/main/ROADMAP.md">roadmap</a>.</p>
+    <p>Lens correction for wide-angle and drone cameras, more comparison modes and an error map, a perspective model and a “ground only” option that follows the streets are planned; see the <a href="https://github.com/raduandrei-source/lineup-raster/blob/main/ROADMAP.md">roadmap</a>.</p>
   </section>
 
   <section id="glossary">
@@ -546,6 +580,7 @@ Esri World Imagery  https://server.arcgisonline.com/ArcGIS/rest/services/World_I
     <h2>Version history</h2>
     <table>
       <tr><th>Version</th><th>Changes</th></tr>
+      <tr><td>0.4.0</td><td>Compare modes: red / cyan overlay, edge tracing and blink. Hold Space to see the reference alone. In the overlay modes, drag moves the photo, Shift both images, Ctrl the reference.</td></tr>
       <tr><td>0.3.0</td><td>First public release, renamed from “Auto Georeference” to LineUp Raster. English documentation, installation guide and this help site. Dependency installer that repairs numpy only when needed. Help entry in the plugin menu.</td></tr>
       <tr><td>0.2.1</td><td>Works even when numpy in the QGIS Python was replaced; clear message for missing libraries; Windows repair script.</td></tr>
       <tr><td>0.2.0</td><td>Auto-refine starts from the manual alignment and is shown before saving; similarity model; safety checks; GDAL reading; sharper reference; free pan and zoom.</td></tr>

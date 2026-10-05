@@ -1,9 +1,9 @@
 # LineUp Raster – Roadmap
 
-Planned work and agreed design decisions. Nothing here is implemented yet.
-Authors: Radu Andrei & Claude · Current version: 0.3.0
+Planned work and agreed design decisions.
+Authors: Radu Andrei & Claude · Current version: 0.4.0
 
-Order of work: **0.4 → 0.5 → 0.6 → 0.7**, then the ideas at the end. Each phase ships on its own and keeps the
+Order of work: **0.5 → 0.6 → 0.7 → 0.8**, then the ideas at the end. Each phase ships on its own and keeps the
 principles of the plugin:
 
 1. Your manual alignment is used as the starting point.
@@ -12,7 +12,27 @@ principles of the plugin:
 
 ---
 
-## 0.4 – Lens correction for DJI drones, plus manual correction
+## Done
+
+### 0.4.0 – Comparison modes (first part)
+
+A **Compare** selector in the alignment window:
+
+- **Slider:** the masking line, as before.
+- **Red / cyan:** reference in cyan, photo in red, in greyscale with exposure evened out. Aligned details turn grey;
+  any offset shows as red / cyan fringes.
+- **Edge tracing:** outlines of the reference (roads, building edges; short texture fragments removed) drawn in yellow
+  over the photo.
+- **Blink:** the two images alternate about three times per second.
+- **Hold Space** in any mode to see the reference alone.
+
+In the overlay modes there is no line: drag / scroll moves the photo, Shift moves both, Ctrl moves the reference.
+Tested in QGIS: a 6 px offset clearly raises the red / cyan fringe and lowers the edge agreement compared with the
+true alignment.
+
+---
+
+## 0.5 – Lens correction for DJI drones, plus manual correction
 
 **Problem.** Wide-angle drone cameras bend straight lines (barrel distortion, the “sphere” effect), most visibly near
 the edges. A photo with this distortion can't be placed correctly by moving, rotating and scaling alone.
@@ -47,20 +67,16 @@ DJI-style XMP block must match. Plus a real DJI sample when available.
 
 ---
 
-## 0.5 – Visual comparison modes for spotting errors
+## 0.6 – More comparison modes and an error map
 
 **Problem.** The masking line shows one image or the other. Small offsets (a metre here, a degree there) are easy to
 miss, especially away from the line.
 
-**A “Compare” selector in the alignment window, with these modes**
+Red / cyan, edge tracing and blink shipped in 0.4.0. Still planned:
 
 | Mode | What you see | Why it helps |
 |---|---|---|
-| **Slider** | The current masking line | Familiar, good for a first look |
-| **Red / cyan** | Reference in cyan, photo in red, both in greyscale, on top of each other | Where the images agree, details turn grey; any offset shows as red and cyan fringes along edges |
-| **Edge tracing** | Outlines of the reference (roads, buildings) drawn as thin coloured lines over the photo | Reads like a CAD overlay or tracing paper; an offset shows as a line running beside its edge |
 | **Checkerboard** | Alternating squares of reference and photo, adjustable size | Shows the whole image at once; errors appear as broken lines at square borders |
-| **Blink** | Hold <kbd>Space</kbd> (or auto-blink 2–3 times per second) to switch between the images | The eye picks up anything that jumps, even a pixel or two |
 | **Loupe** | A round magnifier under the cursor showing the other image, zoom 2–4× | Close inspection without leaving the overview |
 
 **Automatic error map, after auto-refine**
@@ -72,12 +88,11 @@ miss, especially away from the line.
   in metres.
 - A summary in the status line, for example: “median error 0.4 m · worst area 2.1 m (north-east corner)”.
 
-**Order inside the phase:** red / cyan, blink and edge tracing first (cheap, no new dependencies); then checkerboard
-and loupe; then the error map.
+**Order inside the phase:** checkerboard and loupe first; then the error map.
 
 ---
 
-## 0.6 – Perspective and following the streets
+## 0.7 – Perspective and following the streets
 
 **Two separate effects**
 
@@ -95,7 +110,7 @@ and loupe; then the error map.
   show it directly; Qt draws projective transforms.
 - **Ground only** option: choose a line layer of streets from the project (for example OpenStreetMap). Matching then
   uses only features within a few metres of the streets. Rooftops are ignored, which matters in dense city centres.
-- Rooftop matches that don't fit the ground plane are already rejected by RANSAC; with 0.5's residual arrows they become
+- Rooftop matches that don't fit the ground plane are already rejected by RANSAC; with 0.6's residual arrows they become
   visible as grey points leaning outward.
 - Saving uses the projective model (GDAL Warp with control points, order chosen to match).
 
@@ -104,9 +119,9 @@ and loupe; then the error map.
 
 ---
 
-## 0.7 – Lens correction for any camera
+## 0.8 – Lens correction for any camera
 
-Extends 0.4 beyond DJI.
+Extends 0.5 beyond DJI.
 
 1. **Camera profiles from Lensfun.** Lensfun is an open database of camera and lens profiles (distortion, plus
    vignetting and chromatic aberration). The plugin reads the camera make, model and focal length from EXIF and looks

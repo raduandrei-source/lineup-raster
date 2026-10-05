@@ -8,7 +8,7 @@ run with the system Python (`/usr/bin/python3.12`).
 
 | File | What it checks |
 |---|---|
-| `qgis_integration_test.py` | Renders a reference from a synthetic Stereo 70 basemap, builds a rotated, rescaled, altered “aerial photo” (with an EXIF orientation trap), aligns it roughly, runs auto-refine with SIFT and ORB, checks the result against the ground truth, runs the full `run()` workflow, checks the saved GeoTIFF, and checks the comparison window (masking line, pan, zoom, Shift, Fit view). |
+| `qgis_integration_test.py` | Renders a reference from a synthetic Stereo 70 basemap, builds a rotated, rescaled, altered “aerial photo” (with an EXIF orientation trap), aligns it roughly, runs auto-refine with SIFT and ORB, checks the result against the ground truth, runs the full `run()` workflow, checks the saved GeoTIFF, checks the comparison window (masking line, pan, zoom, Shift, Fit view), the Compare modes (a 6 px offset must show up in red / cyan and edge tracing; blink; Space; overlay-mode mouse rules) and the plugin menu. |
 | `numpy2_mismatch_test.py` | Reproduces the Windows failure (numpy 2 installed over a GDAL built for numpy 1, `sys.stderr = None`, QGIS error window simulated) and checks that the plugin runs the full workflow without any error, and that it explains the fix when OpenCV is missing. |
 
 Run:

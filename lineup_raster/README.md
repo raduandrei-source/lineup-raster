@@ -13,6 +13,8 @@ Installation: [INSTALLATION.md](INSTALLATION.md)
   georeferenced reference image, sharper than the screen.
 - **Before/after comparison window.** Reference and photo sit on top of each other; a black line reveals one or the
   other. Each image can be moved, zoomed and the photo rotated independently, so you can line them up by hand.
+- **Compare modes for spotting errors.** Red / cyan overlay, edge tracing and blink show offsets of a pixel or two
+  that are easy to miss with the slider.
 - **Auto-refine.** Starting from your alignment, SIFT or ORB feature matching finds hundreds or thousands of common
   points and moves the photo to the exact position, in the same window, so you see the result before saving.
   Unreliable results are refused and your alignment is kept.
@@ -46,9 +48,24 @@ Installation: [INSTALLATION.md](INSTALLATION.md)
 | Sat / Bright | Colour adjustments for your eyes only; matching is unaffected |
 | Auto-refine alignment | Snaps the photo using SIFT or ORB, starting from your alignment |
 | Undo auto-refine | Back to your alignment |
+| Compare | Slider, Red / cyan overlay, Edge tracing or Blink (see below) |
+| Hold <kbd>Space</kbd> | Shows the reference alone, in any mode |
 
 Near the black line there is a small dead zone: within 15 px you grab the line, between 15 and 20 px nothing
 happens, beyond 20 px you move an image.
+
+## Compare modes
+
+| Mode | What you see | How to read it |
+|---|---|---|
+| Slider | Reference left of the black line, photo right of it | Sweep the line across roads and building edges; they should continue without a jump |
+| Red / cyan overlay | Reference in cyan, photo in red, both in grey tones with exposure evened out | Grey = the images agree. Red / cyan fringes along edges = offset. Solid red or cyan areas = something that exists only in the photo or only in the reference (new building, changed field) |
+| Edge tracing | Your photo, with the outlines of the reference drawn over it in yellow | Yellow lines should sit on the edges of roads and buildings; a line running beside its edge shows the offset |
+| Blink | The reference and the photo alternate about three times per second | Anything that jumps is out of place; the eye notices even a pixel or two |
+
+In the overlay modes (red / cyan, edge tracing, blink) there is no black line: drag or scroll moves **the photo**,
+**Shift** moves both images together, **Ctrl** moves the reference. Holding **Space** shows the reference alone in every
+mode. The Compare modes only change how the images are shown; matching and saving are not affected.
 
 ## How auto-refine works
 
