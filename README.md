@@ -47,8 +47,15 @@ troubleshooting – is in **[INSTALLATION.md](lineup_raster/INSTALLATION.md)**.
 | `ROADMAP.md` | Planned work: lens correction, more comparison modes and an error map, perspective, any-camera profiles |
 | `docs/` | The help site, published with GitHub Pages |
 | `tests/` | Automated tests that run in real QGIS (headless) |
+| `.github/workflows/release.yml` | Publishes a release with the plugin zip when the version changes |
 
-## Building the release zip
+## Releases
+
+Releases are automatic: when the `version=` line in `lineup_raster/metadata.txt` changes on `main`, the
+[Release workflow](.github/workflows/release.yml) builds `lineup_raster.zip`, takes the release notes from the
+changelog in `metadata.txt` and publishes release `v<version>`.
+
+To build the zip by hand:
 
 ```
 zip -r lineup_raster.zip lineup_raster -x "*/__pycache__/*"

@@ -1,0 +1,79 @@
+# Builds lineup_raster.zip and publishes a GitHub release whenever the plugin version
+# in lineup_raster/metadata.txt changes. Release notes come from the changelog in metadata.txt.
+# Authors: Radu Andrei & Claude - MIT License
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'lineup_raster/metadata.txt'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: v
+        run: |
+          VERSION=$(grep -E '^version=' lineup_raster/metadata.txt | cut -d= -f2 | tr -d '\r ')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Plugin version: $VERSION"
+
+      - name: Check whether this version is already released
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v${{ steps.v.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"; echo "Release v${{ steps.v.outputs.version }} exists - nothing to do."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build the plugin zip
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          git archive --format=zip -o lineup_raster.zip HEAD lineup_raster
+          unzip -l lineup_raster.zip
+
+      - name: Write release notes from the changelog
+        if: steps.check.outputs.exists == 'false'
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          {
+            echo "## What's new in ${VERSION}"
+            echo
+            awk -v v="$VERSION" '
+              $0 ~ "^[[:space:]]+" v " - " { on = 1; sub("^[[:space:]]+" v " - ", "- "); print; next }
+              on && /^[[:space:]]+- / { sub(/^[[:space:]]+/, ""); print; next }
+              on { exit }' lineup_raster/metadata.txt
+            echo
+            echo "## Install"
+            echo
+            echo "1. Download **lineup_raster.zip** below."
+            echo "2. QGIS → Plugins → Manage and Install Plugins → **Install from ZIP**."
+            echo "3. First time only, with QGIS closed: install OpenCV into the QGIS Python (Windows: double-click \`repair_dependencies.bat\` in the plugin folder; Debian/Ubuntu: \`sudo apt install python3-opencv\`)."
+            echo
+            echo "Installation guide: https://github.com/raduandrei-source/lineup-raster/blob/main/lineup_raster/INSTALLATION.md · User guide: https://raduandrei-source.github.io/lineup-raster/"
+          } > notes.md
+          cat notes.md
+
+      - name: Publish the release
+        if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          gh release create "v${VERSION}" lineup_raster.zip \
+            --title "LineUp Raster ${VERSION}" \
+            --notes-file notes.md \
+            --target "${GITHUB_SHA}"
